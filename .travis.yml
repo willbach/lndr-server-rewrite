@@ -1,0 +1,45 @@
+dist: trusty
+sudo: required
+language: generic
+
+# caching for fast builds
+cache:
+    directories:
+        - $HOME/.ghc
+        - $HOME/.cabal
+        - $HOME/.stack
+
+before_install:
+    - sed -i'' 's|git@github.com:|https://github.com/|g' stack.yaml
+    - sudo /etc/init.d/postgresql stop
+    - sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
+    - sudo rm -rf /var/lib/postgresql
+    - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+    - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
+    - sudo apt-get update -qq
+    - sudo apt-get install postgresql postgresql-contrib libpq-dev
+    - psql --version
+    - mkdir -p ~/.local/bin; export PATH=$HOME/.local/bin:$PATH; travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
+    - stack setup
+    - sudo /etc/init.d/postgresql restart
+    - cd ucac
+    - npm install
+    - npm run ganache
+    - npm run migrate
+    - cd ..
+    - sudo -u postgres createuser -s travis
+    - sudo -u postgres createuser -s test
+    - sudo -u postgres psql -c "ALTER USER test WITH PASSWORD 'test'";
+    - sudo -u postgres psql -c "CREATE DATABASE lndrtest;"
+    - psql lndrtest -f lndr-backend/db/create_tables.sql
+    - stack install --test --no-run-tests
+
+script:
+    - cp lndr-backend/data/lndr-server.config.test lndr-backend/data/lndr-server.config
+    - cp lndr-backend/data/lndr-server.config.test ~/lndr-server.config
+    - sudo /home/travis/.local/bin/lndr-server &
+    - stack test lndr-cli
+
+after_script:
+    - sudo -u postgres psql -c "DROP DATABASE lndrtest;" -U postgres
+    - sudo service postgresql stop
