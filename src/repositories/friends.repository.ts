@@ -1,8 +1,8 @@
 import db from 'src/db'
 
 export default {
-    addFriends: (address1: string, address2: string) => {
-        return db.any("INSERT INTO friendships (origin, friend) VALUES ($1,$2) ON CONFLICT ON CONSTRAINT friendships_origin_friend_key DO NOTHING", address1, address2)
+    addFriends: (address: string, friend: string) => {
+        return db.any("INSERT INTO friendships (origin, friend) VALUES ($1,$2) ON CONFLICT ON CONSTRAINT friendships_origin_friend_key DO NOTHING", address, friend)
     },
     
     removeFriends: (address: string, addresses: [string]) => {
@@ -12,7 +12,6 @@ export default {
     lookupFriends: (address: string) => {
         return db.any("SELECT inbound.origin, nicknames.nickname FROM friendships inbound INNER JOIN friendships outbound ON inbound.friend = outbound.origin AND inbound.origin = outbound.friend LEFT JOIN nicknames ON nicknames.address = inbound.origin WHERE inbound.friend = $1", address)
     },
-    
     
     lookupInboundFriendRequests: (address: string) => {
         return db.any("SELECT inbound.origin, nicknames.nickname FROM friendships inbound LEFT JOIN friendships outbound ON inbound.friend = outbound.origin AND inbound.origin = outbound.friend LEFT JOIN nicknames ON nicknames.address = inbound.origin WHERE inbound.friend = $1 AND outbound.friend IS NULL", address)

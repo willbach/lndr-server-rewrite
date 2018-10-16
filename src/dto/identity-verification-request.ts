@@ -2,13 +2,17 @@ import IdentityDocument from 'dto/identity-document'
 import RequiredIdentityDocuments from 'dto/required-identity-documents'
 import IdentityVerificationInfo from 'dto/identity-verification-info'
 
-export default class IdentifyVerificationRequest {
+import { signatureToAddress } from 'utils/credit.protocol.util'
+import { hexToBuffer, bufferToHex } from 'utils/buffer.util'
+import ethUtil from 'ethereumjs-util'
+
+export default class IdentityVerificationRequest {
   email: string
   externalUserId: string
   info: IdentityVerificationInfo
   requiredIdDocs: RequiredIdentityDocuments
-  identitySignature: string
-  idDocs: [IdentityDocument]
+  identitySignature?: string
+  idDocs?: [IdentityDocument]
 
   constructor(data) {
     this.email = data.email
@@ -17,5 +21,18 @@ export default class IdentifyVerificationRequest {
     this.requiredIdDocs = new RequiredIdentityDocuments(data.requiredIdDocs)
     this.identitySignature = data.identitySignature
     this.idDocs = data.idDocs
+  }
+
+  signatureMatches() {
+    const hashBuffer = Buffer.concat([
+      hexToBuffer(this.externalUserId)
+    ])
+    const hexHash = bufferToHex(ethUtil.sha3(hashBuffer))
+
+    if (!this.identitySignature) {
+      return false
+    }
+
+    return signatureToAddress(hexHash, this.identitySignature) === this.externalUserId
   }
 }

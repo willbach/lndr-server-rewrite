@@ -4,12 +4,19 @@ export const hexToBuffer = (value) => {
     }
     return Buffer.from(value, 'hex')
 }
+
 export const stringToBuffer = (value) => {
     return Buffer.from(value)
 }
+
 export const bufferToHex = (buffer) => {
     return buffer.toString('hex')
 }
+
+export function utf8ToBuffer(value) {
+    return Buffer.from(value, 'utf8')
+}
+
 export const int32ToBuffer = (value) => {
     const hexValue = value.toString(16)
     const z = '00000000', x = `${z}${z}`

@@ -1,4 +1,7 @@
 import db from 'src/db'
+import request from 'request-promise'
+import configService from 'services/config.service'
+import { AnyCnameRecord } from 'dns';
 
 export default {
     insertPushDatum: (channelID: string, address: string, platform: string) => {
@@ -13,7 +16,18 @@ export default {
         return db.any("DELETE FROM push_data WHERE address = $1 AND channel_id = $2 AND platform = $3", address, channelID, platform)
     },
 
-    sendNotification: () => {
+    sendNotification: (notification: any) => {
+        const options = {
+            method: 'POST',
+            uri: configService.notificationsApiUrl,
+            body: notification,
+            headers: {
+                "x-api-key": configService.notificationsApiKey
+            },
+            json: true // Automatically stringifies the body to JSON
+        }
+        
+        return request(options)
         // ServerConfig -> Notification -> IO Int
         // sendNotification config notification = do
         // initReq <- HTTP.parseRequest notificationUrl

@@ -4,34 +4,84 @@ const config = fs.readFileSync('../data/lndr-server.config.json', { encoding: 'u
 const configObj = JSON.parse(config)
 
 import { privateToAddress } from 'utils/credit.protocol.util'
+import ConfigResponse from 'dto/config-response'
 
-export default {
-    lndrUcacAddrs: configObj['lndr-ucacs'],
-    bindAddress: configObj['bind-address'],
-    bindPort: configObj['bind-port'],
-    creditProtocolAddress: configObj['credit-protocol-address'],
-    issueCreditEvent: configObj['issue-credit-event'],
-    scanStartBlock: configObj['scan-start-block'],
-    dbUser: configObj.db.user,
-    dbUserPassword: configObj.db['user-password'],
-    dbName: configObj.db.name,
-    dbHost: configObj.db.host,
-    dbPort: configObj.db.port,
-    gasPrice: configObj['gas-price'],
-    ethereumPrices: {},
-    maxGas: configObj['max-gas'],
-    latestBlockNumber: 0,
-    heartbeatInterval: configObj['heartbeat-interval'],
-    awsPhotoBucket: configObj.aws['photo-bucket'],
-    awsAccessKeyId: configObj.aws['access-key-id'],
-    awsSecretAccessKey: configObj.aws['secret-access-key'],
-    notificationsApiUrl: configObj.notifications['api-url'],
-    notificationsApiKey: configObj.notifications['api-key'],
-    sumsubApiUrl: configObj.sumsub['api-url'],
-    sumsubApiKey: configObj.sumsub['api-key'],
-    sumsubApiCallbackSecret: configObj.sumsub['api-callback-secret'],
-    web3Url: configObj['web3-url'],
-    executionPrivateKey: configObj['execution-private-key'],
-    executionAddress: privateToAddress(configObj['execution-private-key']),
-    executionNonce: 0,
+class ServerConfig {
+    lndrUcacAddrs: any
+    bindAddress: string
+    bindPort: number
+    creditProtocolAddress: string
+    issueCreditEvent: string
+    scanStartBlock: number
+    dbUser: string
+    dbUserPassword: string
+    dbName: string
+    dbHost: string
+    dbPort: number
+    gasPrice: string
+    ethereumPrices: any
+    maxGas: number
+    latestBlockNumber: number
+    heartbeatInterval: number
+    awsPhotoBucket: string
+    awsAccessKeyId: string
+    awsSecretAccessKey: string
+    notificationsApiUrl: string
+    notificationsApiKey: string
+    sumsubApiUrl: string
+    sumsubApiKey: string
+    sumsubApiCallbackSecret: string
+    web3Url: string
+    executionPrivateKey: string
+    executionAddress: string
+    executionNonce: number
+
+    constructor(data) {
+        this.lndrUcacAddrs = data['lndr-ucacs']
+        this.bindAddress = data['bind-address']
+        this.bindPort = data['bind-port']
+        this.creditProtocolAddress = data['credit-protocol-address']
+        this.issueCreditEvent = data['issue-credit-event']
+        this.scanStartBlock = data['scan-start-block']
+        this.dbUser = data.db.user
+        this.dbUserPassword = data.db['user-password']
+        this.dbName = data.db.name
+        this.dbHost = data.db.host
+        this.dbPort = data.db.port
+        this.gasPrice = data['gas-price']
+        this.ethereumPrices = {}
+        this.maxGas = data['max-gas']
+        this.latestBlockNumber = 0
+        this.heartbeatInterval = data['heartbeat-interval']
+        this.awsPhotoBucket = data.aws['photo-bucket']
+        this.awsAccessKeyId = data.aws['access-key-id']
+        this.awsSecretAccessKey = data.aws['secret-access-key']
+        this.notificationsApiUrl = data.notifications['api-url']
+        this.notificationsApiKey = data.notifications['api-key']
+        this.sumsubApiUrl = data.sumsub['api-url']
+        this.sumsubApiKey = data.sumsub['api-key']
+        this.sumsubApiCallbackSecret = data.sumsub['api-callback-secret']
+        this.web3Url = data['web3-url']
+        this.executionPrivateKey = data['execution-private-key']
+        this.executionAddress = privateToAddress(data['execution-private-key'])
+        this.executionNonce = 0
+    }
+
+    getUcac(currency: string) {
+        return this.lndrUcacAddrs[currency.toLowerCase()]
+    }
+
+    getConfigResponse() {
+        return new ConfigResponse({
+            lndrAddresses: this.lndrUcacAddrs,
+            creditProtocolAddress: this.creditProtocolAddress,
+            gasPrice: this.gasPrice,
+            ethereumPrices: this.ethereumPrices,
+            weekAgoBlock: this.latestBlockNumber - 40600
+        })
+    }
 }
+
+const serverConfig = new ServerConfig(configObj)
+
+export default serverConfig
