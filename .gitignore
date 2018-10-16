@@ -1,2 +1,4 @@
 node_modules
-
+build
+src/data/lndr-server.config.json
+src/data/lndr-server.dev.config.json
