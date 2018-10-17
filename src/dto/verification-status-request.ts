@@ -1,6 +1,6 @@
-import { signatureToAddress } from 'utils/credit.protocol.util'
-import { hexToBuffer, bufferToHex } from 'utils/buffer.util'
-import ethUtil from 'ethereumjs-util'
+import { signatureToAddress } from '../utils/credit.protocol.util'
+import { hexToBuffer, bufferToHex } from '../utils/buffer.util'
+const ethUtil = require('ethereumjs-util')
 
 export default class VerificationStatusRequest {
   user: string

@@ -1,6 +1,6 @@
-import db from 'src/db'
-import BilateralCreditRecord from 'dto/bilateral-credit-record'
-import IssueCreditLog, { hashCreditLog } from 'dto/issue-credit-log'
+import db from '../db'
+import BilateralCreditRecord from '../dto/bilateral-credit-record'
+import IssueCreditLog, { hashCreditLog } from '../dto/issue-credit-log'
 
 export default {
     getCounterParties: (address: string) => {

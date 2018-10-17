@@ -1,4 +1,4 @@
-import nonceService from 'services/nonce.service'
+import nonceService from '../services/nonce.service'
 
 export default {
   getNonce: (req, res) => {

@@ -1,10 +1,10 @@
-import db from 'src/db'
+import db from '../db'
 import request from 'request-promise'
-import configService from 'services/config.service'
+import configService from '../services/config.service'
 
 import FormData from 'form-data'
-import IdentityVerificationRequest from 'dto/identity-verification-request'
-import IdentityDocument from 'dto/identity-document'
+import IdentityVerificationRequest from '../dto/identity-verification-request'
+import IdentityDocument from '../dto/identity-document'
 
 export default {
     addVerificationStatus: (address: string, id: string, status: string) => {

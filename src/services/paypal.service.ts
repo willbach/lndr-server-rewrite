@@ -1,5 +1,5 @@
-import pendingRepository from 'repositories/pending.repository'
-import notificationsRepository from 'repositories/notifications.repository'
+import pendingRepository from '../repositories/pending.repository'
+import notificationsRepository from '../repositories/notifications.repository'
 
 import PayPalRequest from "dto/paypal-request"
 

@@ -1,5 +1,5 @@
-import { signatureToAddress } from 'utils/credit.protocol.util'
-import { hexToBuffer, utf8ToBuffer } from 'utils/buffer.util'
+import { signatureToAddress } from '../utils/credit.protocol.util'
+import { hexToBuffer, utf8ToBuffer } from '../utils/buffer.util'
 
 export default class NickRequest {
   addr: string

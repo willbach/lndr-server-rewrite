@@ -1,4 +1,4 @@
-import friendsRepository from "repositories/friends.repository"
+import friendsRepository from '../repositories/friends.repository'
 
 export default {
   getFriendList: (address: string) => {

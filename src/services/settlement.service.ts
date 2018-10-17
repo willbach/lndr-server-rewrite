@@ -1,9 +1,9 @@
-import pendingRepository from 'repositories/pending.repository'
-import verifiedRepository from 'repositories/verified.repository'
+import pendingRepository from '../repositories/pending.repository'
+import verifiedRepository from '../repositories/verified.repository'
 
-import VerifySettlementRequest from 'dto/verify-settlement-request'
-import CreditRecord from 'dto/credit-record'
-import BilateralCreditRecord from 'dto/bilateral-credit-record'
+import VerifySettlementRequest from '../dto/verify-settlement-request'
+import CreditRecord from '../dto/credit-record'
+import BilateralCreditRecord from '../dto/bilateral-credit-record'
 
 export default {
   getPendingSettlements: async(address: string) => {

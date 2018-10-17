@@ -1,4 +1,4 @@
-import db from 'src/db'
+import db from '../db'
 
 export default {
     insertNick: (address: string, nick: string) => {

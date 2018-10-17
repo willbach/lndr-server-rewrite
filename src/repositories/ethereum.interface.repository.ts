@@ -1,14 +1,15 @@
-import db from 'src/db'
-import Web3 from 'web3'
-import Tx from'ethereumjs-tx'
-import fs from 'fs'
-import BilateralCreditRecord from 'dto/bilateral-credit-record'
+const Web3 = require('web3')
+const Tx = require('ethereumjs-tx')
+const fs = require('fs')
+const path = require('path')
 
-import serverConfig from 'services/config.service'
-import { decomposeSignatureToBytes } from 'utils/credit.protocol.util'
+import db from '../db'
+import serverConfig from '../services/config.service'
+import BilateralCreditRecord from '../dto/bilateral-credit-record'
+import { decomposeSignatureToBytes } from '../utils/credit.protocol.util'
 
 const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
-const rawAbi = fs.readFileSync('../data/CreditProtocol.abi.json', {encoding: 'utf8'})
+const rawAbi = fs.readFileSync(path.join(__dirname, '../../data/CreditProtocol.abi.json'), {encoding: 'utf8'})
 const cpAbi = JSON.parse(rawAbi)
 
 export default {

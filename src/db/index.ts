@@ -1,6 +1,7 @@
-import fs from 'fs'
+const fs = require('fs')
+const path = require('path')
 
-const config = fs.readFileSync('../data/lndr-server.config.json', { encoding: 'utf8' })
+const config = fs.readFileSync(path.join(__dirname, '../../data/lndr-server.config.json'), { encoding: 'utf8' })
 
 const dbConfig = JSON.parse(config).db
 

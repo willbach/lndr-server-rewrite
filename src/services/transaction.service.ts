@@ -1,14 +1,14 @@
-import pendingRepository from 'repositories/pending.repository'
-import verifiedRepository from 'repositories/verified.repository'
-import notificationsRepository from 'repositories/notifications.repository'
-import ethereumInterface from 'repositories/ethereum.interface.repository'
-import serverConfig, { ServerConfig } from 'services/config.service'
+import pendingRepository from '../repositories/pending.repository'
+import verifiedRepository from '../repositories/verified.repository'
+import notificationsRepository from '../repositories/notifications.repository'
+import ethereumInterface from '../repositories/ethereum.interface.repository'
+import serverConfig, { ServerConfig } from '../services/config.service'
 
-import RejectRequest from 'dto/reject-request'
-import CreditRecord from 'dto/credit-record'
-import IssueCreditLog from 'dto/issue-credit-log'
-import BilateralCreditRecord from 'dto/bilateral-credit-record'
-import friendsRepository from 'repositories/friends.repository';
+import RejectRequest from '../dto/reject-request'
+import CreditRecord from '../dto/credit-record'
+import IssueCreditLog from '../dto/issue-credit-log'
+import BilateralCreditRecord from '../dto/bilateral-credit-record'
+import friendsRepository from '../repositories/friends.repository';
 
 export default {
   submitCredit: async(record: CreditRecord, recordNum: number) => {

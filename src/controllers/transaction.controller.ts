@@ -1,6 +1,6 @@
-import transactionService from 'services/transaction.service'
-import RejectRequest from 'dto/reject-request'
-import CreditRecord from 'dto/credit-record';
+import transactionService from '../services/transaction.service'
+import RejectRequest from '../dto/reject-request'
+import CreditRecord from '../dto/credit-record'
 
 export default {
   createTransaction: (req, res) => {

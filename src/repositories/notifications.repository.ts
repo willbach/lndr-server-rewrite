@@ -1,7 +1,7 @@
-import db from 'src/db'
+import db from '../db'
 import request from 'request-promise'
-import configService from 'services/config.service'
-import nicknamesRepository from 'repositories/nicknames.repository'
+import configService from '../services/config.service'
+import nicknamesRepository from '../repositories/nicknames.repository'
 
 export default {
     insertPushDatum: function(channelID: string, address: string, platform: string) {

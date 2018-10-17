@@ -1,5 +1,5 @@
-import paypalService from 'services/paypal.service'
-import PayPalRequest from 'dto/paypal-request'
+import paypalService from '../services/paypal.service'
+import PayPalRequest from '../dto/paypal-request'
 
 export default {
   requestPayPal: (req, res) => {

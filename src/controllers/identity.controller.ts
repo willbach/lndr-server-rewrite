@@ -1,7 +1,7 @@
-import identityService from 'services/identity.service'
-import IdentityVerificationRequest from 'dto/identity-verification-request';
-import IdentityVerificationResponse from 'dto/identity-verification-response';
-import VerificationStatusRequest from 'dto/verification-status-request';
+import identityService from '../services/identity.service'
+import IdentityVerificationRequest from '../dto/identity-verification-request';
+import IdentityVerificationResponse from '../dto/identity-verification-response';
+import VerificationStatusRequest from '../dto/verification-status-request';
 
 export default {
   registerUser: (req, res) => {

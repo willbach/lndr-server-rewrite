@@ -1,5 +1,5 @@
-import notificationsService from 'services/notifications.service'
-import PushRequest from 'dto/push-request'
+import notificationsService from '../services/notifications.service'
+import PushRequest from '../dto/push-request'
 
 export default {
   registerChannelID: (req, res) => {

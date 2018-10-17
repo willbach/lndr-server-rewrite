@@ -1,4 +1,4 @@
-import notificationsRepository from 'repositories/notifications.repository'
+import notificationsRepository from '../repositories/notifications.repository'
 import PushRequest from "dto/push-request"
 
 export default {

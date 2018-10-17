@@ -1,5 +1,5 @@
-import settlementService from 'services/settlement.service'
-import VerifySettlementRequest from 'dto/verify-settlement-request'
+import settlementService from '../services/settlement.service'
+import VerifySettlementRequest from '../dto/verify-settlement-request'
 
 export default {
   getPendingSettlements: (req, res) => {

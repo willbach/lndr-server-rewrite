@@ -1,21 +1,21 @@
 const PORT = 7402
 const app = require('express')()
 
-import bodyParser from 'body-parser'
+const bodyParser = require('body-parser')
 
 app.use(bodyParser.urlencoded({extended: true}), bodyParser.json())
 
 //controllers
-import balanceController from 'controllers/balance.controller'
-import configController from 'controllers/config.controller'
-import friendsController from 'controllers/friends.controller'
-import identityController from 'controllers/identity.controller'
-import nonceController from 'controllers/nonce.controller'
-import notificationsController from 'controllers/notifications.controller'
-import paypalController from 'controllers/paypal.controller'
-import settlementController from 'controllers/settlement.controller'
-import transactionController from 'controllers/transaction.controller'
-import userController from 'controllers/user.controller'
+import balanceController from './controllers/balance.controller'
+import configController from './controllers/config.controller'
+import friendsController from './controllers/friends.controller'
+import identityController from './controllers/identity.controller'
+import nonceController from './controllers/nonce.controller'
+import notificationsController from './controllers/notifications.controller'
+import paypalController from './controllers/paypal.controller'
+import settlementController from './controllers/settlement.controller'
+import transactionController from './controllers/transaction.controller'
+import userController from './controllers/user.controller'
 
 //routes
 app.get("/counterparties/:address", balanceController.getCounterParties) // :> Capture "user" Address :> Get '[JSON] [Address]

@@ -1,4 +1,4 @@
-import { signatureToAddress } from 'utils/credit.protocol.util'
+import { signatureToAddress } from '../utils/credit.protocol.util'
 
 export default class RejectRequest {
   hash: string

@@ -1,5 +1,5 @@
-import db from 'src/db'
-import CreditRecord from 'dto/credit-record'
+import db from '../db'
+import CreditRecord from '../dto/credit-record'
 
 export default {
     lookupPending: (hash: string) => {

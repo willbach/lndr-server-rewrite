@@ -1,10 +1,11 @@
-import fs from 'fs'
+const fs = require('fs')
+const path = require('path')
 
-const config = fs.readFileSync('../data/lndr-server.config.json', { encoding: 'utf8' })
+const config = fs.readFileSync(path.join(__dirname, '../../data/lndr-server.config.json'), { encoding: 'utf8' })
 const configObj = JSON.parse(config)
 
-import { privateToAddress } from 'utils/credit.protocol.util'
-import ConfigResponse from 'dto/config-response'
+import { privateToAddress } from '../utils/credit.protocol.util'
+import ConfigResponse from '../dto/config-response'
 
 export class ServerConfig {
     lndrUcacAddrs: any

@@ -1,5 +1,5 @@
-import verifiedRepository from 'repositories/verified.repository'
-import configService from 'services/config.service'
+import verifiedRepository from '../repositories/verified.repository'
+import configService from '../services/config.service'
 
 export default {
   getCounterParties: (address: string) => {

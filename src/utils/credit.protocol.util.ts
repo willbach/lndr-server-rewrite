@@ -1,5 +1,5 @@
-import ethUtil from 'ethereumjs-util'
-import CreditRecord from 'dto/credit-record'
+const ethUtil = require('ethereumjs-util')
+import CreditRecord from '../dto/credit-record'
 
 import { hexToBuffer, stringToBuffer, bufferToHex, int32ToBuffer } from './buffer.util'
 

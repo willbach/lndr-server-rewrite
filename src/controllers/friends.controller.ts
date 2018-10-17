@@ -1,4 +1,4 @@
-import friendsService from 'services/friends.service'
+import friendsService from '../services/friends.service'
 
 export default {
   getFriendList: (req, res) => {

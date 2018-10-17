@@ -1,8 +1,8 @@
-import identityRepository from 'repositories/identity.repository'
+import identityRepository from '../repositories/identity.repository'
 
 import IdentityVerificationRequest from "dto/identity-verification-request"
 import VerificationStatusRequest from "dto/verification-status-request"
-import VerificationStatusEntry from 'dto/verification-status-entry'
+import VerificationStatusEntry from '../dto/verification-status-entry'
 
 export default {
   registerUser: async(verificationRequest: IdentityVerificationRequest) => {

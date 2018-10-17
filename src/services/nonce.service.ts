@@ -1,4 +1,4 @@
-import verifiedRepository from "repositories/verified.repository"
+import verifiedRepository from '../repositories/verified.repository'
 
 export default {
   getNonce: (address: string, counterparty: string) => {

@@ -1,4 +1,4 @@
-import configService from 'services/config.service'
+import configService from '../services/config.service'
 
 export default {
   getConfig: (_req, res) => {

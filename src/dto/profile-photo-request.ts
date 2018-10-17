@@ -1,5 +1,5 @@
-import { signatureToAddress } from 'utils/credit.protocol.util'
-import ethUtil from 'ethereumjs-util'
+import { signatureToAddress } from '../utils/credit.protocol.util'
+const ethUtil = require('ethereumjs-util')
 
 export default class ProfilePhotoRequest {
   image: string

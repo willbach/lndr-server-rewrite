@@ -1,7 +1,7 @@
-import userService from 'services/user.service'
-import NickRequest from 'dto/nick-request'
-import EmailRequest from 'dto/email-request'
-import ProfilePhotoRequest from 'dto/profile-photo-request';
+import userService from '../services/user.service'
+import NickRequest from '../dto/nick-request'
+import EmailRequest from '../dto/email-request'
+import ProfilePhotoRequest from '../dto/profile-photo-request';
 
 export default {
   setNickname: (req, res) => {

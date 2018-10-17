@@ -1,4 +1,4 @@
-import balanceService from 'services/balance.service'
+import balanceService from '../services/balance.service'
 
 export default {
   getCounterParties: (req: any, res: any) => {

@@ -1,9 +1,10 @@
-import nicknamesRepository from "repositories/nicknames.repository"
-import NickRequest from 'dto/nick-request'
-import EmailRequest from 'dto/email-request'
-import ProfilePhotoRequest from 'dto/profile-photo-request'
-import AWS from 'aws-sdk'
-import configService from 'services/config.service'
+const AWS = require('aws-sdk')
+
+import nicknamesRepository from '../repositories/nicknames.repository'
+import NickRequest from '../dto/nick-request'
+import EmailRequest from '../dto/email-request'
+import ProfilePhotoRequest from '../dto/profile-photo-request'
+import configService from '../services/config.service'
 
 AWS.config.update({ accessKeyId: configService.awsAccessKeyId, secretAccessKey: configService.awsSecretAccessKey })
 
