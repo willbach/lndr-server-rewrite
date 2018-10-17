@@ -36,6 +36,15 @@ export const decomposeSignature = (signature: string) => {
     return { v, r, s }
 }
 
+export const decomposeSignatureToBytes = (signature: string) => {
+    const signatureBuffer = hexToBuffer(signature)
+    const r = signatureBuffer.slice(0, 32)
+    const s = signatureBuffer.slice(32, 64)
+    const vBuffer = signatureBuffer.slice(64, 1)
+
+    return [r, s, vBuffer]
+}
+
 export const privateToAddress = (privateKeyHex) => {
     const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
     return ethUtil.privateToAddress(privateKeyBuffer).toString('hex')

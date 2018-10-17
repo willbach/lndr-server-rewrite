@@ -47,11 +47,11 @@ app.get("/pending_settlements/:address", settlementController.getPendingSettleme
 app.post("/verify_settlement", settlementController.verifySettlement) // :> ReqBody '[JSON] VerifySettlementRequest :> PostNoContent '[JSON] NoContent
 app.get("/tx_hash/:creditHash", settlementController.getTxHash) // :> Capture "hash" Text :> Get '[JSON] Text   get the ETH tx hash using the credit hash
 
-app.post("/lend", transactionController.lend) // :> ReqBody '[JSON] CreditRecord :> PostNoContent '[JSON] NoContent
-app.post("/borrow", transactionController.borrow) // :> ReqBody '[JSON] CreditRecord :> PostNoContent '[JSON] NoContent
+app.post("/lend", transactionController.createTransaction) // :> ReqBody '[JSON] CreditRecord :> PostNoContent '[JSON] NoContent
+app.post("/borrow", transactionController.createTransaction) // :> ReqBody '[JSON] CreditRecord :> PostNoContent '[JSON] NoContent
 app.post("/multi_settlement", transactionController.submitMultiSettlement) // :> ReqBody '[JSON] [CreditRecord] :> PostNoContent '[JSON] NoContent
 app.post("/reject", transactionController.reject) // :> ReqBody '[JSON] RejectRequest :> PostNoContent '[JSON] NoContent
-app.get("/transactions", transactionController.getTransactions) // :> QueryParam "user" Address :> Get '[JSON] [IssueCreditLog]
+app.get("/transactions/:address", transactionController.getTransactions) // :> QueryParam "user" Address :> Get '[JSON] [IssueCreditLog]
 app.get("/pending/:address", transactionController.getPendingTransactions) // :> Capture "user" Address :> Get '[JSON] [CreditRecord]
 
 app.post("/nick", userController.setNickname) // :> ReqBody '[JSON] NickRequest :> PostNoContent '[JSON] NoContent
@@ -63,9 +63,9 @@ app.post("/profile_photo", userController.setProfilePhoto) // :> ReqBody '[JSON]
 app.get("/user", userController.getUserInfo) // :> QueryParam "email" EmailAddress :> QueryParam "nick" Nick :> Get '[JSON] UserInfo
 
 //error handling
-app.use( (req, res, next) => res.status(404).send("Resource Not Found") )
+app.use( (_req, res, _next) => res.status(404).send("Resource Not Found") )
 
-app.use( (err, req, res, next) => {
+app.use( (err, _req, res, _next) => {
     console.error(err.stack)
     res.status(500).send('Server Error')
 })

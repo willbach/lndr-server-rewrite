@@ -6,7 +6,7 @@ const configObj = JSON.parse(config)
 import { privateToAddress } from 'utils/credit.protocol.util'
 import ConfigResponse from 'dto/config-response'
 
-class ServerConfig {
+export class ServerConfig {
     lndrUcacAddrs: any
     bindAddress: string
     bindPort: number
@@ -79,6 +79,10 @@ class ServerConfig {
             ethereumPrices: this.ethereumPrices,
             weekAgoBlock: this.latestBlockNumber - 40600
         })
+    }
+
+    incrementExecutionNonce() {
+        this.executionNonce = this.executionNonce + 1
     }
 }
 

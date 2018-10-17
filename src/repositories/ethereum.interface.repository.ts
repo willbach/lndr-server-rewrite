@@ -1,4 +1,15 @@
 import db from 'src/db'
+import Web3 from 'web3'
+import Tx from'ethereumjs-tx'
+import fs from 'fs'
+import BilateralCreditRecord from 'dto/bilateral-credit-record'
+
+import serverConfig from 'services/config.service'
+import { decomposeSignatureToBytes } from 'utils/credit.protocol.util'
+
+const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
+const rawAbi = fs.readFileSync('../data/CreditProtocol.abi.json', {encoding: 'utf8'})
+const cpAbi = JSON.parse(rawAbi)
 
 export default {
     lndrWeb3: () => {
@@ -8,19 +19,39 @@ export default {
         //     config <- liftIO . atomically $ readTVar configTVar
         //     let provider = HttpProvider (web3Url config)
         //     ioEitherToLndr $ runWeb3' provider web3Action
-
     },
 
-    finalizeTransaction: () => {
-        // finalizeTransaction :: TVar ServerConfig -> BilateralCreditRecord
-        //                     -> LndrHandler TxHash
-        // finalizeTransaction configTVar (BilateralCreditRecord (CreditRecord creditor debtor amount memo _ _ _ _ ucac _ _ _) sig1 sig2 _) = do
+    finalizeTransaction: (record: BilateralCreditRecord) => {
+        const { creditRecord, creditorSignature, debtorSignature } = record
+        const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
 
-        //     config <- liftIO . atomically $ do
-        //         config <- readTVar configTVar
-        //         -- increment the execution account's nonce
-        //         modifyTVar' configTVar (\x -> x { executionNonce = succ (executionNonce config)})
-        //         pure config
+        serverConfig.incrementExecutionNonce()
+
+        const execNonce = serverConfig.executionNonce
+        const privateKeyBuffer = Buffer.from(serverConfig.executionPrivateKey, 'hex')
+        const cpContract = web3.eth.Contract(cpAbi, serverConfig.creditProtocolAddress)
+        const bytes32Memo = Buffer.alloc(32, memo, 'utf8')
+
+        const cSigBuffers = decomposeSignatureToBytes(creditorSignature)
+        const dSigBuffers = decomposeSignatureToBytes(debtorSignature)
+
+        const callData = cpContract.methods.issueCredit(ucac, creditor, debtor, Math.floor(amount), cSigBuffers, dSigBuffers, bytes32Memo).encodeABI()
+
+        const rawTx = {
+            from: serverConfig.executionAddress,
+            to: serverConfig.creditProtocolAddress,
+            value: 0,
+            gas: serverConfig.maxGas,
+            chainId: 1, // 1 is the mainnet chainId
+            data: callData
+        }
+
+        const tx = new Tx(rawTx)
+        tx.sign(privateKeyBuffer)
+
+        const serializedTx = tx.serialize()
+
+        return web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', console.log)
 
         //     let execNonce = executionNonce config
         //         callVal = def { callFrom = Just $ executionAddress config
@@ -110,23 +141,10 @@ export default {
     },
 
     currentBlockNumber: () => {
-        // currentBlockNumber :: ServerConfig -> MaybeT IO Integer
-        // currentBlockNumber config = do
-        //     let provider = HttpProvider (web3Url config)
-        //     blockNumberTextE <- runWeb3' provider Eth.blockNumber
-        //     return $ case blockNumberTextE of
-        //         Right (BlockNumber number) -> number
-        //         Left _        -> 0
-
+        return web3.eth.getBlockNumber()
     },
 
     currentExecutionNonce: () => {
-        // currentExecutionNonce :: ServerConfig -> MaybeT IO Integer
-        // currentExecutionNonce config = do
-        //     let provider = HttpProvider (web3Url config)
-        //     nonceE <- runWeb3' provider $ Eth.getTransactionCount (executionAddress config) Latest
-        //     return $ case nonceE of
-        //         Right (Quantity number) -> number
-        //         Left  _                 -> 0
+        return web3.eth.getTransactionCount(serverConfig.executionAddress)
     }
 }

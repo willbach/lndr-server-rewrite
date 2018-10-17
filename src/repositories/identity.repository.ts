@@ -8,15 +8,15 @@ import IdentityDocument from 'dto/identity-document'
 
 export default {
     addVerificationStatus: (address: string, id: string, status: string) => {
-        return db.any("INSERT INTO identity_verification (address, applicant_id, status) VALUES ($1,$2,$3) ON CONFLICT (address) DO UPDATE SET status = EXCLUDED.status", address, id, status)
+        return db.any("INSERT INTO identity_verification (address, applicant_id, status) VALUES ($1,$2,$3) ON CONFLICT (address) DO UPDATE SET status = EXCLUDED.status", [address, id, status])
     },
 
     removeVerificationStatus: (address: string) => {
-        return db.any("DELETE FROM identity_verification WHERE address = $1", address)
+        return db.any("DELETE FROM identity_verification WHERE address = $1", [address])
     },
 
     lookupVerificationStatus: (address: string) => {
-        return db.any("SELECT address, applicant_id, status FROM identity_verification WHERE address = $1", address)
+        return db.any("SELECT address, applicant_id, status FROM identity_verification WHERE address = $1", [address])
     },
 
     sendVerificationRequest: (verificationRequest: IdentityVerificationRequest) => {

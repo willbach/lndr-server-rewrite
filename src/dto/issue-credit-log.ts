@@ -6,13 +6,17 @@ export default class IssueCreditLog {
   nonce: number
   memo: string
 
-  constructor(data) {
+  constructor(data: any, type?: string) {
     this.ucac = data.ucac
     this.creditor = data.creditor
     this.debtor = data.debtor
-    this.amount = data.amount
     this.nonce = data.nonce
     this.memo = data.memo
+    if (type === 'fromDb') {
+      this.amount = data.verified_credits.amount
+    } else {
+      this.amount = data.amount
+    }
   }
 }
 

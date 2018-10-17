@@ -7,9 +7,27 @@ export default class BilateralCreditRecord {
   txHash?: string
 
   constructor(data) {
-    this.creditRecord = data.creditRecord
-    this.creditorSignature = data.creditorSignature
-    this.debtorSignature = data.debtorSignature
-    this.txHash = data.txHash
+    if (data.creditRecord instanceof CreditRecord) {
+      this.creditRecord = data.creditRecord
+    } else {
+      this.creditRecord = new CreditRecord({
+        creditor: data.creditor,
+        debtor: data.debtor,
+        amount: data.verified_credits.amount,
+        memo: data.memo,
+        submitter: data.submitter,
+        nonce: data.nonce,
+        hash: data.verified_credits.hash,
+        signature: data.creditor_signature,
+        ucac: data.ucac,
+        settlementCurrency: data.settlements.currency,
+        settlementAmount: data.settlements.amount,
+        settlementBlocknumber: data.settlements.blocknumber,
+      })
+    }
+    
+    this.creditorSignature = data.creditor_signature
+    this.debtorSignature = data.debtor_signature
+    this.txHash = data.settlements.tx_hash
   }
 }

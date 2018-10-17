@@ -1,6 +1,5 @@
 import pendingRepository from 'repositories/pending.repository'
 import notificationsRepository from 'repositories/notifications.repository'
-import nicknamesRepository from 'repositories/nicknames.repository'
 
 import PayPalRequest from "dto/paypal-request"
 
@@ -8,21 +7,11 @@ export default {
   requestPayPal: async(paypalRequest: PayPalRequest) => {
     //TODO: send a notification here
     const { friend, requestor } = paypalRequest
-    await pendingRepository.insertPayPalRequest(friend, requestor)
-    const nickname = await nicknamesRepository.lookupNick(requestor)[0]
-    const pushData = await notificationsRepository.lookupPushDatumByAddress(friend)
+    const storage = await pendingRepository.insertPayPalRequest(friend, requestor)
 
-    return Promise.all(pushData.map(datum => {
-      const notification = {
-        channelID: datum.channel_id,
-        platform: datum.platform,
-        user: nickname,
-        notificationType: 'RequestPayPal'
-      }
+    notificationsRepository.sendNotification(requestor, friend, 'RequestPayPal')
 
-      return notificationsRepository.sendNotification(notification)
-    }))
-
+    return storage
     // pushDataM <- liftIO . withResource pool $ Db.lookupPushDatumByAddress friend
     //         nicknameM <- liftIO . withResource pool $ Db.lookupNick requestor
 

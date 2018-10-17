@@ -1,7 +1,7 @@
 import configService from 'services/config.service'
 
 export default {
-  getConfig: (req, res) => {
+  getConfig: (_req, res) => {
     res.json(configService.getConfigResponse())
   }
 }
