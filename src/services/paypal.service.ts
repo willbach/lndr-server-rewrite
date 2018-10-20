@@ -1,7 +1,7 @@
 import pendingRepository from '../repositories/pending.repository'
 import notificationsRepository from '../repositories/notifications.repository'
 
-import PayPalRequest from "dto/paypal-request"
+import PayPalRequest from '../dto/paypal-request'
 
 export default {
   requestPayPal: async(paypalRequest: PayPalRequest) => {

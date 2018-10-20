@@ -2,6 +2,7 @@
     "bind-address": "127.0.0.1",
     "bind-port": 7402,
 
+    "comment1": "lndr addresses",
     "lndr-ucacs": {
         "aud": "0x3599a0abda08069e8e66544a2860e628c5dc1190",
         "cad": "0xc40aed3a0e5a7996d11802c33190e3cc2a4be054",
@@ -19,7 +20,7 @@
         "myr": "0x79a5f8d6cc432c1f017648c4fae840dff4cfcaf2",
         "nok": "0x385540be0f17e1fae8ed83e46f5fb52545dc588b",
         "nzd": "0xce12dfd31dbc83bd24af7fd2e193f3073e3b53ec",
-        "pln": "0xc552e50a5829507bd575063c0c77dbee49c9fe58",
+        "pln": "0xce12dfd31dbc83bd24af7fd2e193f3073e3b53ec",
         "rub": "0x14eb816e20af23ef81cc1deeba71d8642edcb621",
         "sek": "0x6fd660b6f92395901544f637e06ca4b67a30f7c9",
         "sgd": "0x3ac772c0f927df3c07cd90c17b536fcab86e0a53",
@@ -29,26 +30,37 @@
         "vnd": "0x815dcbb2008757a469d0daf8c310fae2fc41e96b"
     },
 
+    "comment2": "Credit Protocol contract address, called for 'issueCredit' among others",
     "credit-protocol-address": "0x1aa76056924bf4768d63357eca6d6a56ec929131",
 
+    "comment3": "the signature of the issue credit event, used when scanning logs",
     "issue-credit-event": "0xcbc85a9af1e8adce13cbeff2e71299b0f3243d7ef1eaec93a9a281e939aceb7b",
 
+    "comment4": "on startup, the server scans the blockchain for cp records. If any records",
+    "comment5": "are missing from the db, rows are added so that user balances are properly",
+    "comment6": "displayed. 'scanStartBlock' defines where the scan should begin; setting the",
+    "comment7": "value equal to the block in which CP was created is a logical choice.",
     "scan-start-block": 0,
 
+    "comment8": "postgres config",
     "db": {
         "host": "localhost",
         "port": 5432,
-        "user": "test",
-        "user-password": "test",
-        "name": "lndrtest"
+        "user": "lndr",
+        "user-password": "lndr",
+        "name": "lndr"
     },
 
+    "comment9": "configuration used for calling CP's 'issueCredit' function",
     "execution-private-key": "edc63d0e14b29aaa26c7585e962f93abb59bd7d8b01b585e073dc03d052a000b",
     "gas-price": 200000000,
     "max-gas": 250000,
 
-    "heartbeat-interval": 3,
+    "comment10": "how often to run the heartbeat function in seconds. The heartbeat is",
+    "comment11": "responsible for confirming settlement transactions.",
+    "heartbeat-interval": 3000,
 
+    "comment12": "aws config and credentials",
     "aws": {
         "photo-bucket": "lndr-avatars",
         "access-key-id": "AAAAAAAAAAAAAAAAAAAA",
@@ -56,15 +68,16 @@
     },
 
     "notifications": {
-        "api-key": "bobloblawlobslawbomb",
-        "api-url": "https://vpz2hgy54f.execute-api.us-east-2.amazonaws.com/test/testNotificationUA"
+        "api-key": "dmwJVI6aM38zOn2LJaZyQ6886zDDW0iha5Fy6zHQ",
+        "api-url": "https://vpz2hgy54f.execute-api.us-east-2.amazonaws.com/prod/testNotificationUA"
     },
 
     "sumsub": {
-        "api-key": "",
-        "api-url": "",
-        "api-callback-secret": ""
+        "api-key": "XHRCWZYEJQQZDR",
+        "api-url": "https://test-api.sumsub.com",
+        "api-callback-secret": "g58gsatzux3nm6t2111lym8npirvjg"
     },
 
+    "comment13": "ethereum node config",
     "web3-url": "http://localhost:8545"
 }

@@ -2,3 +2,8 @@ node_modules
 build
 src/data/lndr-server.config.json
 src/data/lndr-server.dev.config.json
+run-dev.sh
+lndr-backend/
+lndr-cli/
+.stack-work/
+stack.yaml

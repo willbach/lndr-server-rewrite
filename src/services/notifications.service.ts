@@ -1,5 +1,5 @@
 import notificationsRepository from '../repositories/notifications.repository'
-import PushRequest from "dto/push-request"
+import PushRequest from '../dto/push-request'
 
 export default {
   registerChannelID: (pushData: PushRequest) => {

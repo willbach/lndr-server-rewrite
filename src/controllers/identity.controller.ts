@@ -1,7 +1,10 @@
+const crypto = require('crypto')
+
+import serverConfig from '../services/config.service'
 import identityService from '../services/identity.service'
-import IdentityVerificationRequest from '../dto/identity-verification-request';
-import IdentityVerificationResponse from '../dto/identity-verification-response';
-import VerificationStatusRequest from '../dto/verification-status-request';
+import IdentityVerificationRequest from '../dto/identity-verification-request'
+import IdentityVerificationResponse from '../dto/identity-verification-response'
+import VerificationStatusRequest from '../dto/verification-status-request'
 
 export default {
   registerUser: (req, res) => {
@@ -23,8 +26,10 @@ export default {
   handleCallback: (req, res) => {
     const { digest } = req.query
 
-    //compute digest
-    const digestMatches = true
+    const computedDigest = crypto.createHmac('sha1', serverConfig.sumsubApiCallbackSecret).update(req.body, 'utf8').digest('hex')
+
+    const digestMatches = digest === computedDigest
+    console.log('computed digest', digest, digestMatches)
 
     if (digestMatches) {
       identityService.handleCallback(req.body)

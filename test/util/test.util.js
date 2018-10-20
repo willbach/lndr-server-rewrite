@@ -3,6 +3,9 @@ const ethUtil = require('ethereumjs-util')
 module.exports = {
   sign: (hashElements, hexKey) => {
     const buffers = hashElements.map((element) => {
+      if (element instanceof Buffer) {
+        return element
+      }
       const regex = /^[0-9a-fA-F]+$/
       if (regex.test(element)) {
         return Buffer.from(element, 'hex')

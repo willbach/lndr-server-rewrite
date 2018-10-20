@@ -76,11 +76,13 @@ export default {
   },
 
   getUserInfo: (req, res) => {
+    console.log('HERE')
     userService.getUserInfo(req.query.email, req.query.nick)
       .then(data => {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /user: ', err)
         res.status(400).json(err)
       })
   }

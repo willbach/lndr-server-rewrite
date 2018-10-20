@@ -4,24 +4,16 @@ const fs = require('fs')
 const path = require('path')
 
 import db from '../db'
-import serverConfig from '../services/config.service'
+const serverConfig = require('../services/config.service')
 import BilateralCreditRecord from '../dto/bilateral-credit-record'
 import { decomposeSignatureToBytes } from '../utils/credit.protocol.util'
+import IssueCreditLog from '../dto/issue-credit-log';
 
 const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
 const rawAbi = fs.readFileSync(path.join(__dirname, '../../data/CreditProtocol.abi.json'), {encoding: 'utf8'})
 const cpAbi = JSON.parse(rawAbi)
 
-export default {
-    lndrWeb3: () => {
-        // lndrWeb3 :: Web3 b -> LndrHandler b
-        // lndrWeb3 web3Action = do
-        //     configTVar <- asks serverConfig
-        //     config <- liftIO . atomically $ readTVar configTVar
-        //     let provider = HttpProvider (web3Url config)
-        //     ioEitherToLndr $ runWeb3' provider web3Action
-    },
-
+const ethInterfaceRepo = {
     finalizeTransaction: (record: BilateralCreditRecord) => {
         const { creditRecord, creditorSignature, debtorSignature } = record
         const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
@@ -82,43 +74,60 @@ export default {
     },
 
     lndrLogs: () => {
-        // -- | Scan blockchain for 'IssueCredit' events emitted by the Credit Protocol
-        // -- smart contract. If 'Just addr' values are passed in for either 'creditorM'
-        // -- or 'debtorM', or both, logs are filtered to show matching results.
-        // lndrLogs :: ServerConfig -> Text -> Maybe Address -> Maybe Address
-        //         -> Web3 [IssueCreditLog]
-        // lndrLogs config currencyKey creditorM debtorM = rights . fmap interpretUcacLog <$>
-        //     Eth.getLogs (Filter (Just $ creditProtocolAddress config)
-        //                         (Just [ Just (issueCreditEvent config)
-        //                             -- TODO this will have to change once we deploy
-        //                             -- multiple lndr ucacs
-        //                             , addressToBytes32 <$> B.lookup currencyKey (lndrUcacAddrs config)
-        //                             , addressToBytes32 <$> creditorM
-        //                             , addressToBytes32 <$> debtorM ])
-        //                         (BlockWithNumber . BlockNumber $ scanStartBlock config)
-        //                         Latest)
+        const issueCreditSubscription = web3.eth.subscribe('logs', {
+            fromBlock: serverConfig.scanStartBlock,
+            address: serverConfig.creditProtocolAddress,
+            topics: [serverConfig.issueCreditEvent]
+        })
+
+        issueCreditSubscription.on('data', log => {
+            if (log.topics.length >= 3) {
+                const [ ucac, creditor, debtor ] = log.topics
+
+                const dataString = log.data.slice(122)
+
+                const amount = parseInt(dataString.slice(0,2), 16)
+                const nonce = parseInt(dataString.slice(2,4), 16)
+                const memo = Buffer.from(dataString.slice(4), 'hex').toString('utf8')
+
+                const creditLog = new IssueCreditLog({
+                    ucac: ucac.slice(2),
+                    creditor: creditor.slice(2),
+                    debtor: debtor.slice(2),
+                    amount,
+                    nonce,
+                    memo
+                })
+
+                ethInterfaceRepo.handleLog(creditLog)
+            }
+        })
     },
 
-    interpretUcacLog: () => {
-        // -- | Parse a log 'Change' into an 'IssueCreditLog' if possible.
-        // interpretUcacLog :: Change -> Either SomeException IssueCreditLog
-        // interpretUcacLog change = do
-        //     ucacAddr <- bytes32ToAddress <=< (!! 1) $ changeTopics change
-        //     creditorAddr <- bytes32ToAddress <=< (!! 2) $ changeTopics change
-        //     debtorAddr <- bytes32ToAddress <=< (!! 3) $ changeTopics change
-        //     let amount = hexToInteger . takeNthByte32 0 $ changeData change
-        //         nonce = hexToInteger . takeNthByte32 1 $ changeData change
-        //         memo = T.decodeUtf8 . fst . BS16.decode
-        //                             . T.encodeUtf8 . takeNthByte32 2 $ changeData change
-        //     pure $ IssueCreditLog ucacAddr
-        //                         creditorAddr
-        //                         debtorAddr
-        //                         amount
-        //                         nonce
-        //                         memo
+    handleLog: (log) => {
+        console.log('This was only used on the CLI ', log)
     },
 
-    verifySettlementPayment: () => {
+    verifySettlementPayment: async(txHash: string, creditor: string, debtor: string, amount: number) => {
+        const tx = await web3.eth.getTransaction(txHash)
+
+        if (!tx || !tx.value) {
+            throw new Error('transaction not found, tx_hash: ' + txHash)
+        }
+
+        const creditorMatch = creditor === tx.from.slice(2)
+        const debtorMatch = debtor === tx.to.slice(2)
+        const valueMatch = amount === parseInt(tx.value.slice(2), 16)
+
+        if (!creditorMatch) {
+            throw new Error('Bad from match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+        } else if (!debtorMatch) {
+            throw new Error('Bad to match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+        } else if (!valueMatch) {
+            throw new Error('Bad value match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+        }
+
+        return true
         // -- | Verify that a settlement payment was made using a 'txHash' corresponding to
         // -- an Ethereum transaction on the blockchain and the associated addresses and
         // -- eth settlement amount.
@@ -149,3 +158,5 @@ export default {
         return web3.eth.getTransactionCount(serverConfig.executionAddress)
     }
 }
+
+export default ethInterfaceRepo

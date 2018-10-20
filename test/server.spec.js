@@ -3,6 +3,7 @@ const request = require('supertest')
 const server = require('../build/server.js')
 const bufferUtil = require('../build/utils/buffer.util')
 const testUtil = require('./util/test.util')
+const CreditRecord = require('../build/dto/credit-record')
 
 const testUrl = "http://localhost:7402"
 const testPrivkey0  = "7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37"
@@ -38,6 +39,30 @@ const testNick1 = "test1"
 const testNick2 = "test2"
 const testEmail = "will@blockmason.io"
 
+const ucacAddrAUD = '0x3599a0abda08069e8e66544a2860e628c5dc1190'
+const ucacAddrCAD = '0xc40aed3a0e5a7996d11802c33190e3cc2a4be054'
+const ucacAddrCHF = '0xc75dc45521f4dd3852db72a95c581b2fd89992fa'
+const ucacAddrCNY = '0x6f22641557cc768057443255a9d3d0f21f8264b2'
+const ucacAddrDKK = '0x449d75537c56e18c9d5e0438f7847628bbd981f7'
+const ucacAddrEUR = '0xececfc5436bd8ee0c8e98379f3d99dfde6e15fb9'
+const ucacAddrGBP = '0x92571ad90b03ea60419fc66353db9c39ff9db5e1'
+const ucacAddrHKD = '0xb52a2db8ae67a51b1906e4b333930641d62272fd'
+const ucacAddrIDR = '0xfc0f4fe61f23ca895f7e8a51d4e08462f4926687'
+const ucacAddrILS = '0x77ee746c16a817109567b895ff9b9a75bf354bf4'
+const ucacAddrINR = '0x24c7763f5a10370f5b431926f94daa53398182cc'
+const ucacAddrJPY = '0x106c743c55d69afac2c49dae5fa9e75273c3bea4'
+const ucacAddrKRW = '0xc643de39dd15b7787d1b87dd48e6e7e2b1a1f118'
+const ucacAddrMYR = '0x79a5f8d6cc432c1f017648c4fae840dff4cfcaf2'
+const ucacAddrNOK = '0x385540be0f17e1fae8ed83e46f5fb52545dc588b'
+const ucacAddrNZD = '0xce12dfd31dbc83bd24af7fd2e193f3073e3b53ec'
+const ucacAddrPLN = '0xc552e50a5829507bd575063c0c77dbee49c9fe58'
+const ucacAddrRUB = '0x14eb816e20af23ef81cc1deeba71d8642edcb621'
+const ucacAddrSEK = '0x6fd660b6f92395901544f637e06ca4b67a30f7c9'
+const ucacAddrSGD = '0x3ac772c0f927df3c07cd90c17b536fcab86e0a53'
+const ucacAddrTHB = '0x9a76e6a7a56b72d8750f00240363dc06d09c7161'
+const ucacAddrTRY = '0xfe2bbfbe30f835096ccbc9c12a38ac749d8402b2'
+const ucacAddr = '0x6804f48233f6ff2b468f7636560d525ca951931e'
+const ucacAddrVND = '0x815dcbb2008757a469d0daf8c310fae2fc41e96b'
 
 // loadUcacs = do
 //     (ConfigResponse ucacAddresses _ _ _ _) <- getConfig testUrl
@@ -57,6 +82,7 @@ const testEmail = "will@blockmason.io"
 //         Just ucacAddrMYR = M.lookup "MYR" ucacAddresses
 //         Just ucacAddrNOK = M.lookup "NOK" ucacAddresses
 //         Just ucacAddrNZD = M.lookup "NZD" ucacAddresses
+//         Just ucacAddrPLN = M.lookup "PLN" ucacAddresses
 //         Just ucacAddrRUB = M.lookup "RUB" ucacAddresses
 //         Just ucacAddrSEK = M.lookup "SEK" ucacAddresses
 //         Just ucacAddrSGD = M.lookup "SGD" ucacAddresses
@@ -64,12 +90,12 @@ const testEmail = "will@blockmason.io"
 //         Just ucacAddrTRY = M.lookup "TRY" ucacAddresses
 //         Just ucacAddr = M.lookup "USD" ucacAddresses
 //         Just ucacAddrVND = M.lookup "VND" ucacAddresses
-//     return (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND)
+//     return (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrPLN, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND)
 
 
 describe('LNDR Server', function() {
   describe('Nicknames and Friends', function() {
-    it('GET /user?nick= should respond with 404 if nick is not taken', function(done) {
+    it.only('GET /user?nick= should respond with 404 if nick is not taken', function(done) {
       request(server).get('/user?nick=' + testNick1).expect(404, done)
     })
 
@@ -266,12 +292,12 @@ describe('LNDR Server', function() {
     })
   })
 
-  describe('Credits', function() {
+  xdescribe('Credits', function() {
     describe('Basic Credit Test', function() {
-      // (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
+      // (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrPLN, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
 
-      const usdCredit = new CreditRecord({ creditor: testAddress1, debtor: testAddress2, amount: 100, memo: "USD test 1", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined })
-      const badCredit = new CreditRecord({ creditor: testAddress1, debtor: testAddress1, amount: 100, memo: "bad test", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined })
+      const usdCredit = { creditor: testAddress1, debtor: testAddress2, amount: 100, memo: "USD test 1", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
+      const badCredit = { creditor: testAddress1, debtor: testAddress1, amount: 100, memo: "bad test", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
       // testCase "lend money to friend" basicLendTest
       // user1 fails to submit pending credit to himself
@@ -393,7 +419,7 @@ describe('LNDR Server', function() {
         })
       })
 
-      const jpyCredit = new CreditRecord({ creditor: testAddress1, debtor: testAddress2, amount: 20000, memo: "USD test 1", submitter: testAddress2, nonce: 0, hash: "", signature: "", ucac: ucacAddrJPY, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined })
+      const jpyCredit = { creditor: testAddress1, debtor: testAddress2, amount: 20000, memo: "USD test 1", submitter: testAddress2, nonce: 0, hash: "", signature: "", ucac: ucacAddrJPY, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
       it('POST /lend should return 204 for a successful credit submission from user 2', function() {
         jpyCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(jpyCredit.hash)], testPrivkey2)
@@ -421,10 +447,8 @@ describe('LNDR Server', function() {
       })
     })
 
-    describe('Basic Settlement Test', function() {
-      (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
-
-      const settlementCredit = new CreditRecord({ creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined })
+    xdescribe('Basic Settlement Test', function() {
+      const settlementCredit = { creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
 
       let settleAmount = 0
       // user5 submits pending settlement credit to user6
@@ -491,12 +515,12 @@ describe('LNDR Server', function() {
     
     })
 
-    describe('DAI Settlement Test', function() {
+    xdescribe('DAI Settlement Test', function() {
       //copy from above
     })
 
-    describe('PayPal Settlement Test', function() {
-      const paypalCredit = new CreditRecord({ creditor: testAddress10, debtor: testAddress11, amount: 100, memo: "paypal test", submitter: testAddress10, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: 'PAYPAL', settlementAmount: undefined, settlementBlocknumber: undefined })
+    xdescribe('PayPal Settlement Test', function() {
+      const paypalCredit = { creditor: testAddress10, debtor: testAddress11, amount: 100, memo: "paypal test", submitter: testAddress10, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: 'PAYPAL', settlementAmount: undefined, settlementBlocknumber: undefined }
 
       it('POST /lend should return 204 for a successful credit submission from user 1', function() {
         paypalCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalCredit.hash)], testPrivkey10)
@@ -584,7 +608,7 @@ describe('LNDR Server', function() {
     })
   })
 
-  describe('Notifications', function() {
+  xdescribe('Notifications', function() {
     describe('Basic Notifications Test', function() {
       //     [ testCase "registerChannel" basicNotificationsTest
 
@@ -654,12 +678,10 @@ describe('LNDR Server', function() {
     
 //   })
 
-  describe('Multi Transaction', function() {
+  xdescribe('Multi Transaction', function() {
     //     [ testCase "multiSettlementLendTest" multiSettlementLendTest
-    (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
-
-    const testCredit1 = new CreditRecord({ creditor: testAddress7, debtor: testAddress8, amount: 100, memo: "multi credit 1", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined })
-    const testCredit2 = new CreditRecord({ creditor: testAddress7, debtor: testAddress8, amount: 50, memo: "multi credit 2", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined })
+    const testCredit1 = { creditor: testAddress7, debtor: testAddress8, amount: 100, memo: "multi credit 1", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
+    const testCredit2 = { creditor: testAddress7, debtor: testAddress8, amount: 50, memo: "multi credit 2", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
     it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function() {
       testCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit1.hash)], testPrivkey7)
@@ -785,12 +807,9 @@ describe('LNDR Server', function() {
     })
   })
 
-  describe('Multi Settlement', function() {
-    
-    (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
-
-    const settlementCredit1 = new CreditRecord({ creditor: testAddress9, debtor: testAddress0, amount: 2939, memo: 'advanced settlement 1', submitter: testAddress9, nonce: 0, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined })
-    const settlementCredit1 = new CreditRecord({ creditor: testAddress0, debtor: testAddress9, amount: 1939, memo: 'advanced settlement 2', submitter: testAddress9, nonce: 1, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined })
+  xdescribe('Multi Settlement', function() {
+    const settlementCredit1 = { creditor: testAddress9, debtor: testAddress0, amount: 2939, memo: 'advanced settlement 1', submitter: testAddress9, nonce: 0, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
+    const settlementCredit2 = { creditor: testAddress0, debtor: testAddress9, amount: 1939, memo: 'advanced settlement 2', submitter: testAddress9, nonce: 1, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
 
     let settleAmount1 = 0, settleAmount2 = 0
     
@@ -861,7 +880,7 @@ describe('LNDR Server', function() {
       // assertEqual "successful txHash retrieval" txHash (addHexPrefix gottenTxHash)
   })
 
-  describe('PayPal Requests Test', function() {
+  xdescribe('PayPal Requests Test', function() {
     const paypalRequest = {
       friend: testAddress2,
       requestor: testAddress1,

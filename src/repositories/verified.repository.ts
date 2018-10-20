@@ -71,11 +71,15 @@ export default {
     },
 
     deleteExpiredSettlementsAndAssociatedCredits: async() => {
-        const hashes = await db.any("SELECT hash FROM settlements WHERE created_at < now() - interval '2 days' AND verified = FALSE")
-        return Promise.all([
-            db.any("DELETE FROM verified_credits WHERE hash IN $[hashes]", { hashes: hashes }),
-            db.any("DELETE FROM pending_credits WHERE hash IN $[hashes]", { hashes: hashes }),
-            db.any("DELETE FROM settlements WHERE hash IN $[hashes]", { hashes: hashes })
+        const hashes = await db.any("SELECT hash FROM settlements WHERE created_at < now() - interval '2 days' AND verified = FALSE").catch(err => console.log(err))
+        if (hashes.length === 0) {
+            return []
+        }
+
+        return Promise.all([ //TODO: fix this IN query language
+            db.any("DELETE FROM verified_credits WHERE hash IN ($1:csv)", [hashes]),
+            db.any("DELETE FROM pending_credits WHERE hash IN ($1:csv)", [hashes]),
+            db.any("DELETE FROM settlements WHERE hash IN ($1:csv)", [hashes])
         ])
     },
 
@@ -101,6 +105,9 @@ export default {
 
     lookupCreditsByTxHash: (txHash: string) => {
         return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM settlements JOIN verified_credits USING(hash) WHERE settlements.tx_hash = $1", [txHash])
+            .then(credits => {
+                return new BilateralCreditRecord(credits[0])
+            })
     },
 
     verifyCreditByHash: (hash: string) => {
