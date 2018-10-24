@@ -46,7 +46,9 @@ export default {
     },
 
     getNonce: (address: string, counterparty: string) => {
-        return db.any("SELECT COALESCE(MAX(nonce) + 1, 0) FROM verified_credits WHERE (creditor = $1 AND debtor = $2) OR (creditor = $2 AND debtor = $1)", [address, counterparty])
+        return db.any("SELECT COALESCE(MAX(nonce) + 1, 0) FROM verified_credits WHERE (creditor = $1 AND debtor = $2) OR (creditor = $2 AND debtor = $1)", [address, counterparty]).then(data => {
+            return data[0].coalesce
+        })
     },
 
     insertCredit: (record: BilateralCreditRecord) => {
@@ -88,7 +90,13 @@ export default {
     },
 
     txHashByCreditHash: (creditHash: string) => {
-        return db.any("SELECT tx_hash FROM settlements WHERE hash = $1", [creditHash])
+        return db.any("SELECT tx_hash FROM settlements WHERE hash = $1", [creditHash]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
 
     updateSettlementTxHash: (txHash: string, creditHash: string) => {
@@ -100,7 +108,13 @@ export default {
     },
 
     lookupCreditByHash: (hash: string) => {
-        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE verified_credits.hash = $1", [hash])
+        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE verified_credits.hash = $1", [hash]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
 
     lookupCreditsByTxHash: (txHash: string) => {

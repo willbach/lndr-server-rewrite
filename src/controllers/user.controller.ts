@@ -12,6 +12,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          // console.log('[POST] /nick', err)
           res.status(400).json(err)
         })
     } else {
@@ -25,6 +26,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        // console.log('[GET] /nick', err)
         res.status(400).json(err)
       })
   },
@@ -35,6 +37,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        // console.log('[GET] /search_nicknames', err)
         res.status(400).json(err)
       })
   },
@@ -47,6 +50,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          // console.log('[POST] /email', err)
           res.status(400).json(err)
         })
     } else {
@@ -76,13 +80,16 @@ export default {
   },
 
   getUserInfo: (req, res) => {
-    console.log('HERE')
     userService.getUserInfo(req.query.email, req.query.nick)
       .then(data => {
-        res.json(data)
+        if (!data) {
+          res.status(404).end()
+        } else {
+          res.json(data)
+        }
       })
       .catch(err => {
-        console.log('[GET] /user: ', err)
+        // console.log('[GET] /user: ', err)
         res.status(400).json(err)
       })
   }

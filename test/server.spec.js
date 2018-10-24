@@ -3,6 +3,7 @@ const request = require('supertest')
 const server = require('../build/server.js')
 const bufferUtil = require('../build/utils/buffer.util')
 const testUtil = require('./util/test.util')
+const ethUtil = require('ethereumjs-util')
 const CreditRecord = require('../build/dto/credit-record')
 
 const testUrl = "http://localhost:7402"
@@ -95,94 +96,122 @@ const ucacAddrVND = '0x815dcbb2008757a469d0daf8c310fae2fc41e96b'
 
 describe('LNDR Server', function() {
   describe('Nicknames and Friends', function() {
-    it.only('GET /user?nick= should respond with 404 if nick is not taken', function(done) {
+    it('GET /user?nick= should respond with 404 if nick is not taken', function(done) {
       request(server).get('/user?nick=' + testNick1).expect(404, done)
     })
 
-    it('POST /nick should store the nickname', function() {
+    it('POST /nick should store the nickname', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(testAddress3),
+        testUtil.utf8ToBuffer(testNick1)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      const signature = testUtil.serverSign(hash, testPrivkey3)
+
       const nickRequest = {
-        nickRequestAddr: testAddress3,
-        nickRequestNick: testNick1,
-        nickRequestSignature: testUtil.sign([bufferUtil.hexToBuffer(testAddress3)], testPrivkey3)
+        addr: testAddress3,
+        nick: testNick1,
+        signature: signature
       }
 
-      request(server).post('/nick' + testNick1).send(nickRequest).expect(204, done)
+      request(server).post('/nick').send(nickRequest).expect(204, done)
     })
 
-    it('GET /user?nick= should respond with 200 if nick is taken', function() {
+    it('GET /user?nick= should respond with 200 if nick is taken', function(done) {
       request(server).get('/user?nick=' + testNick1).expect(200, done)
     })
 
-    it('GET /nick should respond with the correct nickname for the given address', function() {
+    it('GET /nick should respond with the correct nickname for the given address', function(done) {
       request(server).get('/nick/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body, testNick1)
+        assert.equal(res.body.nickname, testNick1)
         done()
       })
     })
 
-    it('POST /nick should fail if nick is already taken', function() {
+    it('POST /nick should fail if nick is already taken', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(testAddress4),
+        testUtil.utf8ToBuffer(testNick1)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      const signature = testUtil.serverSign(hash, testPrivkey4)
+
       const nickRequest = {
-        nickRequestAddr: testAddress4,
-        nickRequestNick: testNick1,
-        nickRequestSignature: testUtil.sign([bufferUtil.hexToBuffer(testAddress4)], testPrivkey4)
+        addr: testAddress4,
+        nick: testNick1,
+        signature: signature
       }
 
       request(server).post('/nick').send(nickRequest).expect(400, done)
     })
 
-    it('POST /nick should succeed when changing nick', function() {
+    it('POST /nick should succeed when changing nick', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(testAddress3),
+        testUtil.utf8ToBuffer(testNick2)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      const signature = testUtil.serverSign(hash, testPrivkey3)
+
       const nickRequest = {
-        nickRequestAddr: testAddress4,
-        nickRequestNick: testNick1,
-        nickRequestSignature: testUtil.sign([bufferUtil.hexToBuffer(testAddress4)], testPrivkey4)
+        addr: testAddress3,
+        nick: testNick2,
+        signature: signature
       }
 
       request(server).post('/nick').send(nickRequest).expect(204, done)
     })
 
-    it('GET /nick should confirm that nick was changed', function() {
+    it('GET /nick should confirm that nick was changed', function(done) {
       request(server).get('/nick/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body, testNick2)
+        assert.equal(res.body.nickname, testNick2)
         done()
       })
     })
 
-    it('POST /nick should allow new user to use discarded nick', function() {
+    it('POST /nick should allow new user to use discarded nick', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(testAddress4),
+        testUtil.utf8ToBuffer(testNick1)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      const signature = testUtil.serverSign(hash, testPrivkey4)
+
       const nickRequest = {
-        nickRequestAddr: testAddress4,
-        nickRequestNick: testNick1,
-        nickRequestSignature: testUtil.sign([bufferUtil.hexToBuffer(testAddress4)], testPrivkey4)
+        addr: testAddress4,
+        nick: testNick1,
+        signature: signature
       }
 
       request(server).post('/nick').send(nickRequest).expect(204, done)
     })
 
-    it('GET /nick should return fuzzy search results for both nicks', function() {
+    it('GET /nick should return fuzzy search results for both nicks', function(done) {
       request(server).get('/search_nick/' + testSearch).expect(200).then((res) => {
         assert.equal(res.body.length, 2)
         done()
       })
     })
 
-    it('POST /add_friends should allow a user to send a friend request', function() {
+    it('POST /add_friends should allow a user to send a friend request', function(done) {
       request(server).post('/add_friends/' + testAddress3).send([testAddress4]).expect(204, done)
     })
 
-    it('GET /friends should return an empty list for user 1', function() {
+    it('GET /friends should return an empty list for user 1', function(done) {
       request(server).get('/friends/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /friends should return an empty list for user 2', function() {
+    it('GET /friends should return an empty list for user 2', function(done) {
       request(server).get('/friends/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /friend_requests should return a pending from user 1', function() {
+    it('GET /friend_requests should return a pending from user 1', function(done) {
       request(server).get('/friend_requests/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         assert.equal(res.body[0].address, testAddress3)
@@ -190,33 +219,33 @@ describe('LNDR Server', function() {
       })
     })
 
-    it('GET /friend_requests should not return a pending from user 2', function() {
+    it('GET /friend_requests should not return a pending from user 2', function(done) {
       request(server).get('/friend_requests/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /outbound_friend_requests should not return a pending from user 2', function() {
+    it('GET /outbound_friend_requests should not return a pending from user 2', function(done) {
       request(server).get('/outbound_friend_requests/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /outbound_friend_requests should return a pending outbound from user 1', function() {
+    it('GET /outbound_friend_requests should return a pending outbound from user 1', function(done) {
       request(server).get('/outbound_friend_requests/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress3)
+        assert.equal(res.body[0].address, testAddress4)
         done()
       })
     })
 
-    it('POST /add_friends should create a friendship once both parties have confirmed', function() {
+    it('POST /add_friends should create a friendship once both parties have confirmed', function(done) {
       request(server).post('/add_friends/' + testAddress4).send([testAddress3]).expect(204, done)
     })
 
-    it('GET /friends should return a list containing user 2 for user 1', function() {
+    it('GET /friends should return a list containing user 2 for user 1', function(done) {
       request(server).get('/friends/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         assert.equal(res.body[0].address, testAddress4)
@@ -224,7 +253,7 @@ describe('LNDR Server', function() {
       })
     })
 
-    it('GET /friends should return a list containing user 1 for user 2', function() {
+    it('GET /friends should return a list containing user 1 for user 2', function(done) {
       request(server).get('/friends/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         assert.equal(res.body[0].address, testAddress3)
@@ -232,32 +261,32 @@ describe('LNDR Server', function() {
       })
     })
 
-    it('POST /remove_friends should remove two users as friends if user 1 removes user 2', function() {
+    it('POST /remove_friends should remove two users as friends if user 1 removes user 2', function(done) {
        request(server).post('/remove_friends/' + testAddress3).send([testAddress4]).expect(204, done)
     })
 
-    it('GET /friends should return an empty list for user 1', function() {
+    it('GET /friends should return an empty list for user 1', function(done) {
       request(server).get('/friends/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /friends should return an empty list for user 2', function() {
+    it('GET /friends should return an empty list for user 2', function(done) {
       request(server).get('/friends/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /friend_requests should not return a pending from user 2', function() {
+    it('GET /friend_requests should not return a pending from user 2', function(done) {
       request(server).get('/friend_requests/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /friend_requests should not return a pending from user 1', function() {
+    it('GET /friend_requests should not return a pending from user 1', function(done) {
       request(server).get('/friend_requests/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
@@ -268,12 +297,18 @@ describe('LNDR Server', function() {
       request(server).get('/user?email=' + testEmail).expect(404, done)
     })
 
-    it('POST /email should set the email for a given user', function() {
+    it('POST /email should set the email for a given user', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(testAddress3),
+        testUtil.utf8ToBuffer(testEmail)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      const signature = testUtil.serverSign(hash, testPrivkey3)
       // set email for user1
       const emailRequest = {
-        emailRequestAddr: testAddress3,
-        emailRequestEmail: testEmail,
-        emailRequestSignature: testUtil.sign([bufferUtil.hexToBuffer(testAddress3)], testPrivkey3)
+        addr: testAddress3,
+        email: testEmail,
+        signature: signature
       }
       
       request(server).post('/email').send(emailRequest).expect(204, done)
@@ -283,127 +318,292 @@ describe('LNDR Server', function() {
       request(server).get('/user?email=' + testEmail).expect(200, done)
     })
 
-    it('should', function() {
-      // check that email for user3 properly set
+    it('should check that email for user3 properly set', function(done) {
       request(server).get('/email/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body, testEmail)
+        assert.equal(res.body.email, testEmail)
         done()
       })
     })
   })
 
-  xdescribe('Credits', function() {
+  describe('Notifications', function() {
+    describe('Basic Notifications Test', function() {
+      //     [ testCase "registerChannel" basicNotificationsTest
+
+      const testPush = {
+        channelID: "31279004-103e-4ba8-b4bf-65eb3eb81859",
+        platform: 'ios',
+        address: testAddress1,
+        signature: ''
+      }
+
+      it('POST /register_push should correctly register the push ID', function(done) {
+        const hashBuffer = Buffer.concat([
+          testUtil.utf8ToBuffer(testPush.platform),
+          testUtil.utf8ToBuffer(testPush.channelID),
+          testUtil.hexToBuffer(testPush.address)
+        ])
+        const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+        testPush.signature = testUtil.serverSign(hash, testPrivkey1)
+
+        request(server).post('/register_push').send(testPush).expect(204, done)
+      })
+
+      it('POST /register_push should register twice with the same address and device', function(done) {
+        const hashBuffer = Buffer.concat([
+          testUtil.utf8ToBuffer(testPush.platform),
+          testUtil.utf8ToBuffer(testPush.channelID),
+          testUtil.hexToBuffer(testPush.address)
+        ])
+        const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+        testPush.signature = testUtil.serverSign(hash, testPrivkey1)
+
+        request(server).post('/register_push').send(testPush).expect(204, done)
+      })
+
+      it('POST /register_push should register twice with new address but same device', function(done) {
+        testPush.address = testAddress2
+        const hashBuffer = Buffer.concat([
+          testUtil.utf8ToBuffer(testPush.platform),
+          testUtil.utf8ToBuffer(testPush.channelID),
+          testUtil.hexToBuffer(testPush.address)
+        ])
+        const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+        testPush.signature = testUtil.serverSign(hash, testPrivkey2)
+
+        request(server).post('/register_push').send(testPush).expect(204, done)
+      })
+
+      it('POST /register_push should correctly register with a new address and device', function(done) {
+        testPush.address = testAddress2
+        testPush.channelID = "79312004-103e-4ba8-b4bf-65eb3eb59818"
+        testPush.platform = 'android'
+        
+        const hashBuffer = Buffer.concat([
+          testUtil.utf8ToBuffer(testPush.platform),
+          testUtil.utf8ToBuffer(testPush.channelID),
+          testUtil.hexToBuffer(testPush.address)
+        ])
+        const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+        testPush.signature = testUtil.serverSign(hash, testPrivkey2)
+
+        request(server).post('/register_push').send(testPush).expect(204, done)
+      })
+    })
+
+    describe('Delete Notifications ID Test', function() {
+      const testPush = {
+        channelID: "31279004-103e-4ba8-b4bf-65eb3eb81859",
+        platform: 'ios',
+        address: testAddress1,
+        signature: ''
+      }
+
+      it('POST /unregister_push should delete the db entry for that channelID', function(done) {
+        const hashBuffer = Buffer.concat([
+          testUtil.utf8ToBuffer(testPush.platform),
+          testUtil.utf8ToBuffer(testPush.channelID),
+          testUtil.hexToBuffer(testPush.address)
+        ])
+        const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+        testPush.signature = testUtil.serverSign(hash, testPrivkey1)
+
+        request(server).post('/unregister_push').send(testPush).expect(204, done)
+      })
+    })
+  })
+
+  describe('PayPal Requests Test', function() {
+    const paypalRequest = {
+      friend: testAddress2,
+      requestor: testAddress1,
+      paypalRequestSignature: ''
+    }
+
+    it('POST /request_paypal should create a paypal request', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(paypalRequest.friend),
+        testUtil.hexToBuffer(paypalRequest.requestor)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      paypalRequest.paypalRequestSignature = testUtil.serverSign(hash, testPrivkey1)
+
+      request(server).post('/request_paypal').send(paypalRequest).expect(204, done)
+    })
+
+    it('GET /request_paypal returns a list of requests for user 2', function(done) {
+      request(server).get('/request_paypal/' + testAddress2).expect(200).then((res) => {
+        assert.equal(res.body.length, 1)
+        done()
+      })
+    })
+
+    it('GET /request_paypal returns a list of requests for user 1', function(done) {
+      request(server).get('/request_paypal/' + testAddress1).expect(200).then((res) => {
+        assert.equal(res.body.length, 1)
+        done()
+      })
+    })
+
+    it('POST /remove_paypal_request should remove a paypal request', function(done) {
+      const hashBuffer = Buffer.concat([
+        testUtil.hexToBuffer(paypalRequest.friend),
+        testUtil.hexToBuffer(paypalRequest.requestor)
+      ])
+      const hash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
+      paypalRequest.paypalRequestSignature = testUtil.serverSign(hash, testPrivkey1)
+
+      request(server).post('/remove_paypal_request').send(paypalRequest).expect(204, done)
+    })
+
+    it('GET /request_paypal returns an empty list for user 2', function(done) {
+      request(server).get('/request_paypal/' + testAddress2).expect(200).then((res) => {
+        assert.equal(res.body.length, 0)
+        done()
+      })
+    })
+
+    it('GET /request_paypal returns an empty list for user 1', function(done) {
+      request(server).get('/request_paypal/' + testAddress1).expect(200).then((res) => {
+        assert.equal(res.body.length, 0)
+        done()
+      })
+    })
+  })
+
+  describe('Credits', function() {
     describe('Basic Credit Test', function() {
       // (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrPLN, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND) <- loadUcacs
 
       const usdCredit = { creditor: testAddress1, debtor: testAddress2, amount: 100, memo: "USD test 1", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
       const badCredit = { creditor: testAddress1, debtor: testAddress1, amount: 100, memo: "bad test", submitter: testAddress1, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
+      const usdBuffer = Buffer.concat([
+        testUtil.hexToBuffer(usdCredit.ucac),
+        testUtil.hexToBuffer(usdCredit.creditor),
+        testUtil.hexToBuffer(usdCredit.debtor),
+        testUtil.int32ToBuffer(usdCredit.amount),
+        testUtil.int32ToBuffer(usdCredit.nonce)
+      ])
+      usdCredit.hash = testUtil.bufferToHex(ethUtil.sha3(usdBuffer))
+      usdCredit.signature = testUtil.serverSign(usdCredit.hash, testPrivkey1)
+
+      const badBuffer = Buffer.concat([
+        testUtil.hexToBuffer(badCredit.ucac),
+        testUtil.hexToBuffer(badCredit.creditor),
+        testUtil.hexToBuffer(badCredit.debtor),
+        testUtil.int32ToBuffer(badCredit.amount),
+        testUtil.int32ToBuffer(badCredit.nonce)
+      ])
+      badCredit.hash = testUtil.bufferToHex(ethUtil.sha3(badBuffer))
+      badCredit.signature = testUtil.serverSign(badCredit.hash, testPrivkey1)
+
       // testCase "lend money to friend" basicLendTest
       // user1 fails to submit pending credit to himself
-      it('POST /lend should fail if creditor and debtor are the same', function() {
-        usdCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(usdCredit.hash)], testPrivkey1)
+      it('POST /lend should fail if creditor and debtor are the same', function(done) {
         request(server).post('/lend').send(badCredit).expect(400, done)
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 1', function() {
+      it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         request(server).post('/lend').send(usdCredit).expect(204, done)
       })
 
-      it('GET /pending should return 1 record for user 1', function() {
+      it('GET /pending should return 1 record for user 1', function(done) {
         request(server).get('/pending/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('GET /pending should return 1 record for user 2', function() {
+      it('GET /pending should return 1 record for user 2', function(done) {
         request(server).get('/pending/' + testAddress2).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('POST /reject user 2 should reject credit from user 1', function() {
+      it('POST /reject user 2 should reject credit from user 1', function(done) {
         const rejectRequest = { hash: usdCredit.hash, signature: testUtil.sign([bufferUtil.hexToBuffer(usdCredit.hash)], testPrivkey2) }
         request(server).post('/reject').send(rejectRequest).expect(204, done)
       })
 
-      it('GET /pending should return 0 records for user 2', function() {
+      it('GET /pending should return 0 records for user 2', function(done) {
         request(server).get('/pending/' + testAddress2).expect(200).then((res) => {
           assert.equal(res.body.length, 0)
           done()
         })
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 1', function() {
-        usdCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(usdCredit.hash)], testPrivkey1)
+      it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
+        usdCredit.signature = testUtil.serverSign(usdCredit.hash, testPrivkey1)
+
         request(server).post('/lend').send(usdCredit).expect(204, done)
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 2', function() {
-        usdCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(usdCredit.hash)], testPrivkey2)
+      it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         usdCredit.submitter = testAddress2
+        usdCredit.signature = testUtil.serverSign(usdCredit.hash, testPrivkey2)
+
         request(server).post('/lend').send(usdCredit).expect(204, done)
       })
 
-      it('GET /pending should return 0 records for user 1', function() {
+      xit('GET /pending should return 0 records for user 1', function(done) {
         request(server).get('/pending/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body.length, 0)
           done()
         })
       })
 
-      it('GET /transactions should return 1 record for user 1', function() {
+      xit('GET /transactions should return 1 record for user 1', function(done) {
         request(server).get('/transactions?user=' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('GET /balance should return the correct amount for user 1', function() {
+      xit('GET /balance should return the correct amount for user 1', function(done) {
         request(server).get('/balance/' + testAddress1 + '?currency=USD').expect(200).then((res) => {
           assert.equal(res.body, 100)
           done()
         })
       })
 
-      it('GET /balance should return the correct balance between user 1 and user 2', function() {
+      xit('GET /balance should return the correct balance between user 1 and user 2', function(done) {
         request(server).get('/balance/' + testAddress1 + '/' + testAddress2 + '?currency=USD').expect(200).then((res) => {
           assert.equal(res.body, 100)
           done()
         })
       })
 
-      it('GET /balance should return the correct amount for user 2', function() {
+      xit('GET /balance should return the correct amount for user 2', function(done) {
         request(server).get('/balance/' + testAddress2 + '?currency=USD').expect(200).then((res) => {
           assert.equal(res.body, -100)
           done()
         })
       })
 
-      it('GET /balance should return the correct balance between user 2 and user 1', function() {
+      xit('GET /balance should return the correct balance between user 2 and user 1', function(done) {
         request(server).get('/balance/' + testAddress2 + '/' + testAddress1 + '?currency=USD').expect(200).then((res) => {
           assert.equal(res.body, -100)
           done()
         })
       })
 
-      it('GET /counterparties for user 1 should include user 2', function() {
+      xit('GET /counterparties for user 1 should include user 2', function(done) {
         request(server).get('/counterparties/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body[0], testAddress2)
           done()
         })
       })
 
-      it('GET /counterparties for user 2 should include user 1', function() {
+      xit('GET /counterparties for user 2 should include user 1', function(done) {
         request(server).get('/counterparties/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body[0], testAddress1)
           done()
         })
       })
 
-      it('GET /friends should return a list containing user 2 for user 1', function() {
+      xit('GET /friends should return a list containing user 2 for user 1', function(done) {
         request(server).get('/friends/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           assert.equal(res.body[0].address, testAddress2)
@@ -411,7 +611,7 @@ describe('LNDR Server', function() {
         })
       })
   
-      it('GET /friends should return a list containing user 1 for user 2', function() {
+      xit('GET /friends should return a list containing user 1 for user 2', function(done) {
         request(server).get('/friends/' + testAddress2).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           assert.equal(res.body[0].address, testAddress1)
@@ -421,25 +621,25 @@ describe('LNDR Server', function() {
 
       const jpyCredit = { creditor: testAddress1, debtor: testAddress2, amount: 20000, memo: "USD test 1", submitter: testAddress2, nonce: 0, hash: "", signature: "", ucac: ucacAddrJPY, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
-      it('POST /lend should return 204 for a successful credit submission from user 2', function() {
+      xit('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         jpyCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(jpyCredit.hash)], testPrivkey2)
         request(server).post('/lend').send(jpyCredit).expect(204, done)
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 1', function() {
+      xit('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         jpyCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(jpyCredit.hash)], testPrivkey1)
         jpyCredit.submitter = testAddress1
         request(server).post('/lend').send(jpyCredit).expect(204, done)
       })
 
-      it('GET /balance should return the correct JPY amount for user 2', function() {
+      xit('GET /balance should return the correct JPY amount for user 2', function(done) {
         request(server).get('/balance/' + testAddress2 + '?currency=JPY').expect(200).then((res) => {
           assert.equal(res.body, -20000)
           done()
         })
       })
 
-      it('GET /balance should return the correct JPY balance between user 2 and user 1', function() {
+      xit('GET /balance should return the correct JPY balance between user 2 and user 1', function(done) {
         request(server).get('/balance/' + testAddress2 + '/' + testAddress1 + '?currency=JPY').expect(200).then((res) => {
           assert.equal(res.body, -20000)
           done()
@@ -452,12 +652,12 @@ describe('LNDR Server', function() {
 
       let settleAmount = 0
       // user5 submits pending settlement credit to user6
-      it('POST /lend should be successful', function() {
+      it('POST /lend should be successful', function(done) {
         settlementCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit.hash)], testPrivkey5)
         request(server).post('/lend').send(settlementCredit).expect(204, done)
       })
 
-      it('GET /pending_settlements should have 1 pending settlement for user 5', function() {
+      it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
         request(server).get('/pending_settlements/' + testAddress5).expect(200).then((res) => {
           assert.equal(res.body.pendingSettlements.length, 1)
           assert.equal(res.body.bilateralPendingSettlements.length, 0)
@@ -465,12 +665,12 @@ describe('LNDR Server', function() {
         })
       })
 
-      it('POST /lend should be successful', function() {
+      it('POST /lend should be successful', function(done) {
         settlementCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit.hash)], testPrivkey6)
         request(server).post('/lend').send(settlementCredit).expect(204, done)
       })
 
-      it('GET /pending_settlements should have 1 pending settlement for user 5', function() {
+      it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
         request(server).get('/pending_settlements/' + testAddress5).expect(200).then((res) => {
           assert.equal(res.body.pendingSettlements.length, 0)
           assert.equal(res.body.bilateralPendingSettlements.length, 1)
@@ -522,84 +722,84 @@ describe('LNDR Server', function() {
     xdescribe('PayPal Settlement Test', function() {
       const paypalCredit = { creditor: testAddress10, debtor: testAddress11, amount: 100, memo: "paypal test", submitter: testAddress10, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: 'PAYPAL', settlementAmount: undefined, settlementBlocknumber: undefined }
 
-      it('POST /lend should return 204 for a successful credit submission from user 1', function() {
+      it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         paypalCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalCredit.hash)], testPrivkey10)
         request(server).post('/lend').send(paypalCredit).expect(204, done)
       })
 
-      it('GET /pending should return 1 record for user 1', function() {
+      it('GET /pending should return 1 record for user 1', function(done) {
         request(server).get('/pending/' + testAddress10).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('GET /pending should return 1 record for user 2', function() {
+      it('GET /pending should return 1 record for user 2', function(done) {
         request(server).get('/pending/' + testAddress11).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('POST /reject user 2 should reject credit from user 1', function() {
+      it('POST /reject user 2 should reject credit from user 1', function(done) {
         const rejectRequest = { hash: paypalCredit.hash, signature: testUtil.sign([bufferUtil.hexToBuffer(paypalCredit.hash)], testPrivkey11) }
         request(server).post('/reject').send(rejectRequest).expect(204, done)
       })
 
-      it('GET /pending should return 0 records for user 2', function() {
+      it('GET /pending should return 0 records for user 2', function(done) {
         request(server).get('/pending/' + testAddress11).expect(200).then((res) => {
           assert.equal(res.body.length, 0)
           done()
         })
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 1', function() {
+      it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         paypalCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalCredit.hash)], testPrivkey10)
         request(server).post('/lend').send(paypalCredit).expect(204, done)
       })
 
-      it('POST /lend should return 204 for a successful credit submission from user 2', function() {
+      it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         paypalCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalCredit.hash)], testPrivkey11)
         paypalCredit.submitter = testAddress11
         request(server).post('/borrow').send(paypalCredit).expect(204, done)
       })
 
-      it('GET /pending should return 0 records for user 1', function() {
+      it('GET /pending should return 0 records for user 1', function(done) {
         request(server).get('/pending/' + testAddress10).expect(200).then((res) => {
           assert.equal(res.body.length, 0)
           done()
         })
       })
 
-      it('GET /transactions should return 1 record for user 1', function() {
+      it('GET /transactions should return 1 record for user 1', function(done) {
         request(server).get('/transactions?user=' + testAddress10).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
           done()
         })
       })
 
-      it('GET /balance should return the correct amount for user 1', function() {
+      it('GET /balance should return the correct amount for user 1', function(done) {
         request(server).get('/balance/' + testAddress10 + '?currency=GBP').expect(200).then((res) => {
           assert.equal(res.body, 100)
           done()
         })
       })
 
-      it('GET /balance should return the correct balance between user 1 and user 2', function() {
+      it('GET /balance should return the correct balance between user 1 and user 2', function(done) {
         request(server).get('/balance/' + testAddress10 + '/' + testAddress11 + '?currency=GBP').expect(200).then((res) => {
           assert.equal(res.body, 100)
           done()
         })
       })
 
-      it('GET /balance should return the correct amount for user 2', function() {
+      it('GET /balance should return the correct amount for user 2', function(done) {
         request(server).get('/balance/' + testAddress11 + '?currency=GBP').expect(200).then((res) => {
           assert.equal(res.body, -100)
           done()
         })
       })
 
-      it('GET /balance should return the correct balance between user 2 and user 1', function() {
+      it('GET /balance should return the correct balance between user 2 and user 1', function(done) {
         request(server).get('/balance/' + testAddress11 + '/' + testAddress10 + '?currency=GBP').expect(200).then((res) => {
           assert.equal(res.body, -100)
           done()
@@ -608,58 +808,7 @@ describe('LNDR Server', function() {
     })
   })
 
-  xdescribe('Notifications', function() {
-    describe('Basic Notifications Test', function() {
-      //     [ testCase "registerChannel" basicNotificationsTest
-
-      const testPush = {
-        channelID: "31279004-103e-4ba8-b4bf-65eb3eb81859",
-        platform: 'ios',
-        address: testAddress1,
-        signature: ''
-      }
-
-      it('POST /register_push should correctly register the push ID', function() {
-        testPush.signature = testUtil.sign([bufferUtil.hexToBuffer(testPush.address)], testPrivkey1)
-        request(server).post('/register_push').send(testPush).expect(204, done)
-      })
-
-      it('POST /register_push should register twice with the same address and device', function() {
-        testPush.signature = testUtil.sign([bufferUtil.hexToBuffer(testPush.address)], testPrivkey1)
-        request(server).post('/register_push').send(testPush).expect(204, done)
-      })
-
-      it('POST /register_push should register twice with the same address and device', function() {
-        testPush.address = testAddress2
-        testPush.signature = testUtil.sign([bufferUtil.hexToBuffer(testPush.address)], testPrivkey2)
-        request(server).post('/register_push').send(testPush).expect(204, done)
-      })
-
-      it('POST /register_push should correctly register with a new address and device', function() {
-        testPush.address = testAddress2
-        testPush.channelID = "79312004-103e-4ba8-b4bf-65eb3eb59818"
-        testPush.platform = 'android'
-        testPush.signature = testUtil.sign([bufferUtil.hexToBuffer(testPush.address)], testPrivkey2)
-        request(server).post('/register_push').send(testPush).expect(204, done)
-      })
-    })
-
-    describe('Delete Notifications ID Test', function() {
-      const testPush = {
-        channelID: "31279004-103e-4ba8-b4bf-65eb3eb81859",
-        platform: 'ios',
-        address: testAddress1,
-        signature: ''
-      }
-
-      it('POST /unregister_push should delete the db entry for that channelID', function() {
-        testPush.signature = testUtil.sign([bufferUtil.hexToBuffer(testPush.address)], testPrivkey1)
-        request(server).post('/unregister_push').send(testPush).expect(204, done)
-      })
-    })
-  })
-
-  // describe('Authentication', function() {
+  // describe('Authentication', function(done) {
   //   //     [ testCase "nick signing" nickSignTest
   //   assertEqual "expected nick request signature" nickSignature (Right "6c965e1e501c18eedaf8af07dcdee651e0569efd017211be7faf10454c11bcf9611c8e9feaca7ac8ac400cce441db84ecbeb6f817fd8f40e321b33c3a0f4b21d1b")
   //   where
@@ -667,7 +816,7 @@ describe('LNDR Server', function() {
   //       nickSignature = generateSignature unsignedNickRequest testPrivkey1
   // })
 
-//   describe('Utils', function() {
+//   describe('Utils', function(done) {
     //     [ testCase "parseIssueCreditInput" parseCreditInputTest
     // parseCreditInputTest :: Assertion
 // parseCreditInputTest = do
@@ -683,50 +832,50 @@ describe('LNDR Server', function() {
     const testCredit1 = { creditor: testAddress7, debtor: testAddress8, amount: 100, memo: "multi credit 1", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
     const testCredit2 = { creditor: testAddress7, debtor: testAddress8, amount: 50, memo: "multi credit 2", submitter: testAddress7, nonce: 0, hash: "", signature: "", ucac: ucacAddrGBP, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function(done) {
       testCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit1.hash)], testPrivkey7)
       testCredit2.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit2.hash)], testPrivkey7)
       request(server).post('/multi_settlement').send([testCredit1, testCredit2]).expect(204, done)
     })
 
-    it('GET /pending should return 1 record for user 1', function() {
+    it('GET /pending should return 1 record for user 1', function(done) {
       request(server).get('/pending/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         done()
       })
     })
 
-    it('GET /pending should return 1 record for user 2', function() {
+    it('GET /pending should return 1 record for user 2', function(done) {
       request(server).get('/pending/' + testAddress8).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         done()
       })
     })
 
-    it('POST /reject user 2 should reject credit1 from user 1', function() {
+    it('POST /reject user 2 should reject credit1 from user 1', function(done) {
       const rejectRequest = { hash: testCredit1.hash, signature: testUtil.sign([bufferUtil.hexToBuffer(testCredit1.hash)], testPrivkey2) }
       request(server).post('/reject').send(rejectRequest).expect(204, done)
     })
 
-    it('POST /reject user 2 should reject credit2 from user 1', function() {
+    it('POST /reject user 2 should reject credit2 from user 1', function(done) {
       const rejectRequest = { hash: testCredit2.hash, signature: testUtil.sign([bufferUtil.hexToBuffer(testCredit2.hash)], testPrivkey2) }
       request(server).post('/reject').send(rejectRequest).expect(204, done)
     })
 
-    it('GET /pending should return 0 records for user 2', function() {
+    it('GET /pending should return 0 records for user 2', function(done) {
       request(server).get('/pending/' + testAddress8).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1 (2nd time)', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1 (2nd time)', function(done) {
       testCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit1.hash)], testPrivkey7)
       testCredit2.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit2.hash)], testPrivkey7)
       request(server).post('/multi_settlement').send([testCredit1, testCredit2]).expect(204, done)
     })
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function(done) {
       testCredit1.submitter = testAddress8
       testCredit2.submitter = testAddress8
       testCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(testCredit1.hash)], testPrivkey8)
@@ -734,63 +883,63 @@ describe('LNDR Server', function() {
       request(server).post('/multi_settlement').send([testCredit1, testCredit2]).expect(204, done)
     })
 
-    it('GET /pending should return 0 records for user 1', function() {
+    it('GET /pending should return 0 records for user 1', function(done) {
       request(server).get('/pending/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body.length, 0)
         done()
       })
     })
 
-    it('GET /transactions should return 2 records for user 1', function() {
+    it('GET /transactions should return 2 records for user 1', function(done) {
       request(server).get('/transactions?user=' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body.length, 2)
         done()
       })
     })
 
-    it('GET /balance should return the correct amount for user 1', function() {
+    it('GET /balance should return the correct amount for user 1', function(done) {
       request(server).get('/balance/' + testAddress7 + '?currency=USD').expect(200).then((res) => {
         assert.equal(res.body, 150)
         done()
       })
     })
 
-    it('GET /balance should return the correct balance between user 1 and user 2', function() {
+    it('GET /balance should return the correct balance between user 1 and user 2', function(done) {
       request(server).get('/balance/' + testAddress7 + '/' + testAddress8 + '?currency=USD').expect(200).then((res) => {
         assert.equal(res.body, 150)
         done()
       })
     })
 
-    it('GET /balance should return the correct amount for user 2', function() {
+    it('GET /balance should return the correct amount for user 2', function(done) {
       request(server).get('/balance/' + testAddress8 + '?currency=USD').expect(200).then((res) => {
         assert.equal(res.body, -150)
         done()
       })
     })
 
-    it('GET /balance should return the correct balance between user 2 and user 1', function() {
+    it('GET /balance should return the correct balance between user 2 and user 1', function(done) {
       request(server).get('/balance/' + testAddress8 + '/' + testAddress7 + '?currency=USD').expect(200).then((res) => {
         assert.equal(res.body, -150)
         done()
       })
     })
 
-    it('GET /counterparties for user 1 should include user 2', function() {
+    it('GET /counterparties for user 1 should include user 2', function(done) {
       request(server).get('/counterparties/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body[0], testAddress8)
         done()
       })
     })
 
-    it('GET /counterparties for user 2 should include user 1', function() {
+    it('GET /counterparties for user 2 should include user 1', function(done) {
       request(server).get('/counterparties/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body[0], testAddress7)
         done()
       })
     })
 
-    it('GET /friends should return a list containing user 2 for user 1', function() {
+    it('GET /friends should return a list containing user 2 for user 1', function(done) {
       request(server).get('/friends/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         assert.equal(res.body[0].address, testAddress8)
@@ -798,7 +947,7 @@ describe('LNDR Server', function() {
       })
     })
 
-    it('GET /friends should return a list containing user 1 for user 2', function() {
+    it('GET /friends should return a list containing user 1 for user 2', function(done) {
       request(server).get('/friends/' + testAddress8).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
         assert.equal(res.body[0].address, testAddress7)
@@ -813,13 +962,13 @@ describe('LNDR Server', function() {
 
     let settleAmount1 = 0, settleAmount2 = 0
     
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function(done) {
       settlementCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit1.hash)], testPrivkey9)
       settlementCredit2.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit2.hash)], testPrivkey9)
       request(server).post('/multi_settlement').send([settlementCredit1, settlementCredit2]).expect(204, done)
     })
 
-    it('GET /pending_settlements should have 1 pending settlement for user 5', function() {
+    it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
       request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
         assert.equal(res.body.pendingSettlements.length, 2)
         assert.equal(res.body.bilateralPendingSettlements.length, 0)
@@ -827,7 +976,7 @@ describe('LNDR Server', function() {
       })
     })
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function(done) {
       settlementCredit1.submitter = testAddress0
       settlementCredit2.submitter = testAddress0
       settlementCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit1.hash)], testPrivkey0)
@@ -835,7 +984,7 @@ describe('LNDR Server', function() {
       request(server).post('/multi_settlement').send([settlementCredit1, settlementCredit2]).expect(204, done)
     })
 
-    it('GET /pending_settlements should have 2 bilateral pending settlements for user 9', function() {
+    it('GET /pending_settlements should have 2 bilateral pending settlements for user 9', function(done) {
       request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
         assert.equal(res.body.pendingSettlements.length, 0)
         assert.equal(res.body.bilateralPendingSettlements.length, 2)
@@ -878,51 +1027,5 @@ describe('LNDR Server', function() {
 
       // gottenTxHash <- getTxHash testUrl creditHash
       // assertEqual "successful txHash retrieval" txHash (addHexPrefix gottenTxHash)
-  })
-
-  xdescribe('PayPal Requests Test', function() {
-    const paypalRequest = {
-      friend: testAddress2,
-      requestor: testAddress1,
-      signature: ''
-    }
-
-    it('POST /request_paypal should create a paypal request', function() {
-      paypalRequest.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalRequest.requestor)], testPrivkey1)
-      request(server).post('/request_paypal').send(paypalRequest).expect(204, done)
-    })
-
-    it('GET /request_paypal returns a list of requests', function() {
-      request(server).get('/request_paypal/' + testAddress0).expect(200).then((res) => {
-        assert.equal(res.body.length, 1)
-        done()
-      })
-    })
-
-    it('GET /request_paypal returns a list of requests', function() {
-      request(server).get('/request_paypal/' + testAddress1).expect(200).then((res) => {
-        assert.equal(res.body.length, 1)
-        done()
-      })
-    })
-
-    it('POST /request_paypal should create a paypal request', function() {
-      paypalRequest.signature = testUtil.sign([bufferUtil.hexToBuffer(paypalRequest.requestor)], testPrivkey1)
-      request(server).post('/remove_paypal_request').send(paypalRequest).expect(204, done)
-    })
-
-    it('GET /request_paypal returns a list of requests', function() {
-      request(server).get('/request_paypal/' + testAddress0).expect(200).then((res) => {
-        assert.equal(res.body.length, 0)
-        done()
-      })
-    })
-
-    it('GET /request_paypal returns a list of requests', function() {
-      request(server).get('/request_paypal/' + testAddress1).expect(200).then((res) => {
-        assert.equal(res.body.length, 0)
-        done()
-      })
-    })
   })
 })

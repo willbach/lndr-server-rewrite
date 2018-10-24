@@ -67,9 +67,15 @@ export class ServerConfig {
         this.sumsubApiKey = data.sumsub['api-key']
         this.sumsubApiCallbackSecret = data.sumsub['api-callback-secret']
         this.web3Url = data['web3-url']
-        this.executionPrivateKey = data['execution-private-key']
+        
         this.executionAddress = privateToAddress(data['execution-private-key'])
         this.executionNonce = 0
+
+        if (data['execution-private-key'].slice(0,2) === '0x') {
+            this.executionPrivateKey = data['execution-private-key']
+        } else {
+            this.executionPrivateKey = '0x' + data['execution-private-key'] 
+        }
     }
 
     getUcac(currency: string) {

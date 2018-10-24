@@ -10,22 +10,47 @@ export default {
     },
     
     lookupNick: (address: string) => {
-        return db.any("SELECT nickname FROM nicknames WHERE address = $1", [address])
+        return db.any("SELECT nickname FROM nicknames WHERE address = $1", [address]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
     
     lookupEmail: (address: string) => {
-        return db.any("SELECT email FROM nicknames WHERE address = $1", [address])
+        return db.any("SELECT email FROM nicknames WHERE address = $1", [address]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     }, 
     
     lookupAddressByNick: (nick: string) => {
-        return db.any("SELECT address, nickname FROM nicknames WHERE nickname = $1", [nick])
+        return db.any("SELECT address, nickname FROM nicknames WHERE nickname = $1", [nick]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
     
     lookupAddressByEmail: (email: string) => {
-        return db.any("SELECT address, nickname FROM nicknames WHERE email = $1", [email])
+        return db.any("SELECT address, nickname FROM nicknames WHERE email = $1", [email]).then(result => {
+            if (result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
     
     lookupAddressesByFuzzyNick: (nick: string) => {
-        return db.any("SELECT address, nickname FROM nicknames WHERE nickname LIKE $1 LIMIT 10", [nick + "%"])
+        const fuzzyNick = nick + "%"
+        return db.any("SELECT address, nickname FROM nicknames WHERE nickname LIKE $1 LIMIT 10", [fuzzyNick])
     }
 }

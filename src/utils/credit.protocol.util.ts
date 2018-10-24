@@ -22,8 +22,7 @@ export const verifySignature = (transaction: CreditRecord, signature: string) =>
 export const signatureToAddress = (hexHash: string, signature: string) => {
     const { v, r, s } = decomposeSignature(signature)
     let hash = Buffer.from(hexHash, 'hex')
-    const msgHash = ethUtil.hashPersonalMessage(hash)
-    const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(msgHash, v, r, s) )
+    const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(hash, v, r, s) )
     return addressBuffer.toString('hex')
 }
 
@@ -40,9 +39,9 @@ export const decomposeSignatureToBytes = (signature: string) => {
     const signatureBuffer = hexToBuffer(signature)
     const r = signatureBuffer.slice(0, 32)
     const s = signatureBuffer.slice(32, 64)
-    const vBuffer = signatureBuffer.slice(64, 1)
+    const v = signatureBuffer.slice(64, 1)
 
-    return [r, s, vBuffer]
+    return {r, s, v}
 }
 
 export const privateToAddress = (privateKeyHex) => {

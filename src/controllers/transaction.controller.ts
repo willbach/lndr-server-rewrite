@@ -8,10 +8,11 @@ export default {
 
     if (transaction.signatureMatches()) {
       transactionService.submitCredit(transaction, 0)
-        .then(data => {
-          res.json(data)
+        .then(() => {
+          res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /lend or /borrow', err)
           res.status(400).json(err)
         })
     } else {
@@ -26,10 +27,11 @@ export default {
 
     if (signaturesMatch) {
       Promise.all(transactions.map((tx, index) => transactionService.submitCredit(tx, index)))
-        .then(data => {
-          res.json(data)
+        .then(() => {
+          res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /multi_settlement', err)
           res.status(400).json(err)
         })
     } else {
@@ -45,7 +47,8 @@ export default {
         res.status(204).end()
       })
       .catch(err => {
-        if (err.toString().contains('bad rejection sig')) {
+        console.log('[POST] /reject', err)
+        if (err.contains('bad rejection sig')) {
           res.status(401).json(err)
         } else {
           res.status(400).json(err)
@@ -59,6 +62,7 @@ export default {
           res.json(data)
         })
         .catch(err => {
+          console.log('[GET] /transactions', err)
           res.status(400).json(err)
         })
   },
@@ -69,6 +73,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /pending', err)
         res.status(400).json(err)
       })
   }

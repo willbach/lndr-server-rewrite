@@ -1,5 +1,6 @@
 import { signatureToAddress } from '../utils/credit.protocol.util'
-import { hexToBuffer, utf8ToBuffer } from '../utils/buffer.util'
+import { hexToBuffer, utf8ToBuffer, bufferToHex } from '../utils/buffer.util'
+const ethUtil = require('ethereumjs-util')
 
 export default class NickRequest {
   addr: string
@@ -17,7 +18,8 @@ export default class NickRequest {
       hexToBuffer(this.addr),
       utf8ToBuffer(this.nick)
     ])
-
-    return signatureToAddress(hashBuffer.toString('hex'), this.signature) === this.addr
+    const hash = bufferToHex(ethUtil.sha3(hashBuffer))
+    
+    return signatureToAddress(hash, this.signature) === this.addr
   }
 }

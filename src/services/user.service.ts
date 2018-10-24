@@ -67,7 +67,6 @@ export default {
   },
 
   getUserInfo: (email: string, nick: string) => {
-    console.log(1, email, nick)
     if (email) {
       return nicknamesRepository.lookupAddressByEmail(email)
     } else if (nick) {

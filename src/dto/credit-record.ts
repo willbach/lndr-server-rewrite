@@ -1,5 +1,5 @@
 import { signatureToAddress } from '../utils/credit.protocol.util'
-import { hexToBuffer, int32ToBuffer } from '../utils/buffer.util'
+import { hexToBuffer, int32ToBuffer, bufferToHex } from '../utils/buffer.util'
 const ethUtil = require('ethereumjs-util')
 
 export default class CreditRecord {
@@ -17,33 +17,36 @@ export default class CreditRecord {
   settlementBlocknumber?: number
 
   constructor(data: any, type?: string) {
-    this.creditor = data.creditor
-    this.debtor = data.debtor
+    this.creditor = this.strip0x(data.creditor)
+    this.debtor = this.strip0x(data.debtor)
+    this.submitter = this.strip0x(data.submitter)
+    this.ucac = this.strip0x(data.ucac)
     this.memo = data.memo
-    this.submitter = data.submitter
     this.nonce = data.nonce
     this.signature = data.signature
-    this.ucac = data.ucac
+    this.amount = data.amount
+    this.hash = data.hash
 
     if (type === 'settlement') {
-      this.amount = data.pending_credits.amount
-      this.hash = data.pending_credits.hash
-      this.settlementCurrency = data.settlements.currency
-      this.settlementAmount = data.settlements.amount
-      this.settlementBlocknumber = data.settlements.blocknumber
+      this.settlementCurrency = data.settlement_currency
+      this.settlementAmount = data.settlement_amount
+      this.settlementBlocknumber = data.settlement_blocknumber
 
     } else if(type === 'pendingTx') {
-      this.amount = data.pending_credits.amount
-      this.hash = data.pending_credits.hash
       this.settlementCurrency = data.settlement_currency
       this.settlementAmount = data.settlementAmount
       this.settlementBlocknumber = data.settlementBlocknumber
 
     } else { //this is for incoming records
-      this.amount = data.amount
-      this.hash = data.hash
-      this.settlementCurrency = data.settlementCurrency
+      this.settlementCurrency = data.settlement_currency
     }
+  }
+
+  strip0x(address) {
+    if (address.substr(0, 2) === '0x') {
+      return address.slice(2)
+    }
+    return address
   }
 
   signatureMatches() {
@@ -59,6 +62,6 @@ export default class CreditRecord {
       int32ToBuffer(this.nonce)
     ])
 
-    return ethUtil.sha3(buffer).toString('hex')
+    return bufferToHex(ethUtil.sha3(buffer))
   }
 }

@@ -14,7 +14,7 @@ export default {
   submitCredit: async(record: CreditRecord, recordNum: number) => {
     const { creditor, debtor, memo, submitter, hash, signature, ucac } = record
 
-    const nonce = await verifiedRepository.getNonce(creditor, debtor)[0] // only used to log
+    const nonce = await verifiedRepository.getNonce(creditor, debtor) // only used to log
     console.log('NONCE FOR TX: ', nonce)
 
     if (hash !== record.generateHash()) {
@@ -25,17 +25,20 @@ export default {
       throw new Error('Submitter is not creditor nor debtor.')
     } else if (creditor === debtor) {
       throw new Error('Creditor and debtor cannot be equal.')
-    } else if (!Object.values(serverConfig.lndrUcacAddrs).includes(ucac)) {
+    } else if (!Object.values(serverConfig.lndrUcacAddrs).includes('0x' + ucac)) {
       throw new Error('Unrecognized UCAC address.')
     }
 
     const counterparty = submitter === creditor ? debtor : creditor
-    const rawPending = await pendingRepository.lookupPending(hash)[0]
+    const rawPending = await pendingRepository.lookupPending(hash)
+    console.log(1)
 
     if (rawPending) {
       const pendingCredit = new CreditRecord(rawPending, 'settlement')
+      console.log(2)
       
       if (pendingCredit.signature !== record.signature) {
+        console.log(3)
         const creditorSignature = record.submitter === record.creditor ? record.signature : pendingCredit.signature
         const debtorSignature = record.submitter === record.debtor ? record.signature : pendingCredit.signature
         
@@ -43,20 +46,23 @@ export default {
 
         if (!bilateralRecord.creditRecord.settlementAmount) {
           const web3Result = await ethereumInterface.finalizeTransaction(bilateralRecord)
+          console.log(4)
 
           console.log('WEB3:', web3Result)
         }
 
         await verifiedRepository.insertCredit(bilateralRecord)
-        await pendingRepository.deletePending(bilateralRecord.creditRecord.hash, false)
+        await pendingRepository.deletePending(bilateralRecord.creditRecord.hash, true)
 
         if (recordNum === 0) {
+          console.log(5)
           notificationsRepository.sendNotification(submitter, counterparty, 'CreditConfirmation')
         }
       } else {
         throw new Error('Signatures should not be the same for creditor and debtor.')
       }
     } else {
+      console.log(6)
       const processedRecord = calculateSettlementCreditRecord(serverConfig, record)
 
       const existingPending = await pendingRepository.lookupPendingByAddresses(creditor, debtor)
@@ -72,8 +78,10 @@ export default {
       await friendsRepository.addFriends(creditor, debtor)
       await friendsRepository.addFriends(debtor, creditor)
       await pendingRepository.insertPending(processedRecord)
+      console.log(7)
       
       if (recordNum === 0) {
+        console.log(8)
         notificationsRepository.sendNotification(submitter, counterparty, 'NewPendingCredit')
       }
     }
@@ -84,19 +92,19 @@ export default {
   reject: async(rejectRequest: RejectRequest) => {
     const signerAddress = rejectRequest.getAddress()
 
-    const rawPending = await pendingRepository.lookupPending(rejectRequest.hash)[0]
+    const rawPending = await pendingRepository.lookupPending(rejectRequest.hash)
 
     if (!rawPending) {
       throw new Error('Hash does not match any pending record')
     }
 
-    const pending = new CreditRecord(rawPending, 'settlement')
+    const pending = new CreditRecord(rawPending)
 
     if (signerAddress !== pending.creditor && signerAddress !== pending.debtor) {
       throw new Error('bad rejection sig')
     }
 
-    const rejection = await pendingRepository.deletePending(rejectRequest.hash, true)
+    const rejection = await pendingRepository.deletePending(rejectRequest.hash, false)
 
     const recipientAddress = signerAddress === pending.creditor ? pending.debtor : pending.creditor
 
@@ -112,7 +120,7 @@ export default {
   },
 
   getPendingTransactions: async(address: string) => {
-    const rawPending = pendingRepository.lookupPendingByAddress(address, false)
+    const rawPending = await pendingRepository.lookupPendingByAddress(address, false)
 
     return rawPending.map(tx => new CreditRecord(tx, 'pendingTx'))
   }

@@ -1,5 +1,5 @@
 import db from '../db'
-import request from 'request-promise'
+import * as request from 'request-promise'
 import configService from '../services/config.service'
 import nicknamesRepository from '../repositories/nicknames.repository'
 

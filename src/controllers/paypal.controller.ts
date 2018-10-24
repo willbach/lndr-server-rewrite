@@ -20,10 +20,11 @@ export default {
 
   getPayPalRequests: (req, res) => {
     paypalService.getPayPalRequests(req.params.address)
-      .then(() => {
-        res.status(204).end()
+      .then(data => {
+        res.json(data)
       })
       .catch(err => {
+        console.log('[POST] /request_paypal', err)
         res.status(400).json(err)
       })
   },

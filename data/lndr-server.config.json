@@ -20,7 +20,7 @@
         "myr": "0x79a5f8d6cc432c1f017648c4fae840dff4cfcaf2",
         "nok": "0x385540be0f17e1fae8ed83e46f5fb52545dc588b",
         "nzd": "0xce12dfd31dbc83bd24af7fd2e193f3073e3b53ec",
-        "pln": "0xce12dfd31dbc83bd24af7fd2e193f3073e3b53ec",
+        "pln": "0xc552e50a5829507bd575063c0c77dbee49c9fe58",
         "rub": "0x14eb816e20af23ef81cc1deeba71d8642edcb621",
         "sek": "0x6fd660b6f92395901544f637e06ca4b67a30f7c9",
         "sgd": "0x3ac772c0f927df3c07cd90c17b536fcab86e0a53",
@@ -46,9 +46,9 @@
     "db": {
         "host": "localhost",
         "port": 5432,
-        "user": "lndr",
-        "user-password": "lndr",
-        "name": "lndr"
+        "user": "test",
+        "user-password": "test",
+        "name": "lndrtest"
     },
 
     "comment9": "configuration used for calling CP's 'issueCredit' function",
@@ -68,14 +68,14 @@
     },
 
     "notifications": {
-        "api-key": "dmwJVI6aM38zOn2LJaZyQ6886zDDW0iha5Fy6zHQ",
-        "api-url": "https://vpz2hgy54f.execute-api.us-east-2.amazonaws.com/prod/testNotificationUA"
+        "api-key": "bobloblawlobslawbomb",
+        "api-url": "https://vpz2hgy54f.execute-api.us-east-2.amazonaws.com/test/testNotificationUA"
     },
 
     "sumsub": {
-        "api-key": "XHRCWZYEJQQZDR",
-        "api-url": "https://test-api.sumsub.com",
-        "api-callback-secret": "g58gsatzux3nm6t2111lym8npirvjg"
+        "api-key": "",
+        "api-url": "",
+        "api-callback-secret": ""
     },
 
     "comment13": "ethereum node config",

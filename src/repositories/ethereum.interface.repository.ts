@@ -2,39 +2,62 @@ const Web3 = require('web3')
 const Tx = require('ethereumjs-tx')
 const fs = require('fs')
 const path = require('path')
+const ethUtil = require('ethereumjs-util')
 
 import db from '../db'
 const serverConfig = require('../services/config.service')
 import BilateralCreditRecord from '../dto/bilateral-credit-record'
 import { decomposeSignatureToBytes } from '../utils/credit.protocol.util'
-import IssueCreditLog from '../dto/issue-credit-log';
+import IssueCreditLog from '../dto/issue-credit-log'
+import { hexToBuffer } from '../utils/buffer.util'
+import { Server } from 'https'
 
-const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
+// const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
+const web3  = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
 const rawAbi = fs.readFileSync(path.join(__dirname, '../../data/CreditProtocol.abi.json'), {encoding: 'utf8'})
 const cpAbi = JSON.parse(rawAbi)
 
 const ethInterfaceRepo = {
-    finalizeTransaction: (record: BilateralCreditRecord) => {
+    finalizeTransaction: async(record: BilateralCreditRecord) => {
         const { creditRecord, creditorSignature, debtorSignature } = record
-        const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
+        const { creditor, debtor, amount, memo, ucac, hash } = creditRecord
 
-        serverConfig.incrementExecutionNonce()
+        // serverConfig.default.incrementExecutionNonce()
 
-        const execNonce = serverConfig.executionNonce
-        const privateKeyBuffer = Buffer.from(serverConfig.executionPrivateKey, 'hex')
-        const cpContract = web3.eth.Contract(cpAbi, serverConfig.creditProtocolAddress)
-        const bytes32Memo = Buffer.alloc(32, memo, 'utf8')
+        const execNonce = serverConfig.default.executionNonce
+        const cpContract = new web3.eth.Contract(cpAbi, serverConfig.default.creditProtocolAddress)
+        const privateKeyBuffer = Buffer.from(serverConfig.default.executionPrivateKey.slice(2), 'hex')
+        const bytes32Memo = web3.utils.utf8ToHex(memo)
 
-        const cSigBuffers = decomposeSignatureToBytes(creditorSignature)
-        const dSigBuffers = decomposeSignatureToBytes(debtorSignature)
+        // const cSigBuffers = decomposeSignatureToBytes(creditorSignature)//.map(piece => web3.utils.hexToBytes('0x' + piece.toString('hex')))
+        // const dSigBuffers = decomposeSignatureToBytes(debtorSignature)//.map(piece => web3.utils.hexToBytes('0x' + piece.toString('hex')))
 
-        const callData = cpContract.methods.issueCredit(ucac, creditor, debtor, Math.floor(amount), cSigBuffers, dSigBuffers, bytes32Memo).encodeABI()
+        let credV = web3.utils.toDecimal("0x" + creditorSignature.substr(128, 2))
+        if (credV < 27) credV += 27
+        credV = bignumToHexString(web3.utils.toBN(credV))
+        let debtV = web3.utils.toDecimal("0x" + debtorSignature.substr(128, 2))
+        if (debtV < 27) debtV += 27
+        debtV = bignumToHexString(web3.utils.toBN(debtV))
+        const cSig: [string, string, string] = ["0x" + creditorSignature.substr(0, 64), "0x" + creditorSignature.substr(64, 64), credV]
+        const dSig: [string, string, string] = ["0x" + creditorSignature.substr(0, 64), "0x" + creditorSignature.substr(64, 64), debtV]
+
+        // console.log(ucac, creditor, debtor, Math.floor(amount), cSigBuffers, dSigBuffers, bytes32Memo)
+        // console.log(cSigBuffers[2].readUInt8(0))
+        // const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), cSigBuffers[2].readUIntBE(0, 1), cSigBuffers[0], cSigBuffers[1]) )
+        // console.log('CREDITOR', addressBuffer.toString('hex'), creditor)
+
+        const callData = cpContract.methods.issueCredit('0x' + ucac, '0x' + creditor, '0x' + debtor, bignumToHexString(amount), cSig, dSig, bytes32Memo).encodeABI()
+
+        // const estimatedGas = await cpContract.methods.issueCredit('0x' + ucac, '0x' + creditor, '0x' + debtor, bignumToHexString(amount), cSig, dSig, bytes32Memo).estimatedGas()
+        // console.log('ESTIMATED GAS', estimatedGas)
 
         const rawTx = {
-            from: serverConfig.executionAddress,
-            to: serverConfig.creditProtocolAddress,
+            nonce: execNonce,
+            gasPrice: serverConfig.default.gasPrice * 1000,
+            gasLimit: serverConfig.default.maxGas * 10,
+            from: serverConfig.default.executionAddress,
+            to: serverConfig.default.creditProtocolAddress,
             value: 0,
-            gas: serverConfig.maxGas,
             chainId: 1, // 1 is the mainnet chainId
             data: callData
         }
@@ -43,41 +66,43 @@ const ethInterfaceRepo = {
         tx.sign(privateKeyBuffer)
 
         const serializedTx = tx.serialize()
+        return web3.eth.sendRawTransaction(serializedTx).then(console.log)
 
-        return web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', console.log)
+        // const tx = {
+        //     // nonce: execNonce,
+        //     from: '0x' + serverConfig.default.executionAddress,
+        //     gasPrice: web3.utils.numberToHex(serverConfig.default.gasPrice * 10000),
+        //     gas: web3.utils.numberToHex(serverConfig.default.maxGas * 20),
+        //     gasLimit: web3.utils.numberToHex(serverConfig.default.maxGas * 20),
+        //     to: serverConfig.default.creditProtocolAddress,
+        //     value: '0',
+        //     chainId: 1, // 1 is the mainnet chainId
+        //     data: callData
+        // }
 
-        //     let execNonce = executionNonce config
-        //         callVal = def { callFrom = Just $ executionAddress config
-        //                         , callTo = creditProtocolAddress config
-        //                         , callGasPrice = Just . Quantity $ gasPrice config
-        //                         , callValue = Just . Quantity $ 0
-        //                         , callGas = Just . Quantity $ maxGas config
-        //                         }
-        //         chainId = 1 -- 1 is the mainnet chainId
-        //         (sig1r, sig1s, sig1v) = decomposeSig sig1
-        //         (sig2r, sig2s, sig2v) = decomposeSig sig2
-        //         encodedMemo :: BytesN 32
-        //         encodedMemo = BytesN . BA.convert . T.encodeUtf8 $ memo
-        //         issueCreditCall = issueCredit callVal
-        //                                         ucac
-        //                                         creditor debtor (UIntN amount)
-        //                                         (sig1r :< sig1s :< sig1v :< NilL)
-        //                                         (sig2r :< sig2s :< sig2v :< NilL)
-        //                                         encodedMemo
+        // console.log(tx)
 
-        //     rawTx <- maybe (throwError (err500 {errBody = "Error generating txData."}))
-        //                     pure $ createRawTransaction issueCreditCall
-        //                                                 execNonce chainId
-        //                                                 (executionPrivateKey config)
-        //     result <- lndrWeb3 $ Eth.sendRawTransaction rawTx
-        //     pure result
+        // const signedTx = await web3.eth.accounts.signTransaction(tx, serverConfig.default.executionPrivateKey)
+        // const result = await web3.eth.sendSignedTransaction(signedTx.rawTransaction).on('receipt', console.log)
+        // return result
+
+        function bignumToHexString(num) {
+            const a = num.toString(16);
+            return "0x" + '0'.repeat(64 - a.length) + a;
+        }
+
+        function fillBytes32(ascii) {
+            // 66 instead of 64 to account for the '0x' prefix
+            return ascii + '0'.repeat(66 - ascii.length);
+        }
     },
 
     lndrLogs: () => {
+        console.log('LOOKING FOR LOGS')
         const issueCreditSubscription = web3.eth.subscribe('logs', {
-            fromBlock: serverConfig.scanStartBlock,
-            address: serverConfig.creditProtocolAddress,
-            topics: [serverConfig.issueCreditEvent]
+            fromBlock: serverConfig.default.scanStartBlock,
+            address: serverConfig.default.creditProtocolAddress,
+            topics: [serverConfig.default.issueCreditEvent]
         })
 
         issueCreditSubscription.on('data', log => {
@@ -102,6 +127,13 @@ const ethInterfaceRepo = {
                 ethInterfaceRepo.handleLog(creditLog)
             }
         })
+
+        const issueCreditErrorSubscription = web3.eth.subscribe('logs', {
+            fromBlock: serverConfig.default.scanStartBlock,
+            address: '0x60ef3386514cc5a63a0be3beb3e447f614b09c68697f392e9a5b907f5dbd48b9',
+            topics: [serverConfig.default.issueCreditEvent]
+        })
+        issueCreditErrorSubscription.on('data', console.log)
     },
 
     handleLog: (log) => {
@@ -155,7 +187,7 @@ const ethInterfaceRepo = {
     },
 
     currentExecutionNonce: () => {
-        return web3.eth.getTransactionCount(serverConfig.executionAddress)
+        return web3.eth.getTransactionCount(serverConfig.default.executionAddress)
     }
 }
 

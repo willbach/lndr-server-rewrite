@@ -54,8 +54,8 @@ app.post("/reject", transactionController.reject) // :> ReqBody '[JSON] RejectRe
 app.get("/transactions/:address", transactionController.getTransactions) // :> QueryParam "user" Address :> Get '[JSON] [IssueCreditLog]
 app.get("/pending/:address", transactionController.getPendingTransactions) // :> Capture "user" Address :> Get '[JSON] [CreditRecord]
 
-app.post("/nick", userController.setNickname) // :> ReqBody '[JSON] NickRequest :> PostNoContent '[JSON] NoContent
 app.get("/nick/:address", userController.getNickname) // :> Capture "user" Address :> Get '[JSON] Text
+app.post("/nick", userController.setNickname) // :> ReqBody '[JSON] NickRequest :> PostNoContent '[JSON] NoContent
 app.get("/search_nick/:nick", userController.searchNicknames) // :> Capture "nick" Text :> Get '[JSON] [UserInfo]
 app.post("/email", userController.setEmail) // :> ReqBody '[JSON] EmailRequest :> PostNoContent '[JSON] NoContent
 app.get("/email/:address", userController.getEmail) // :> Capture "user" Address :> Get '[JSON] EmailAddress

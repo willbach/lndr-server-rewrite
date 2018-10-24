@@ -3,7 +3,13 @@ import CreditRecord from '../dto/credit-record'
 
 export default {
     lookupPending: (hash: string) => {
-        return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount, settlements.blocknumber FROM pending_credits LEFT JOIN settlements USING(hash) WHERE pending_credits.hash = $1", [hash])
+        return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount, settlements.blocknumber FROM pending_credits LEFT JOIN settlements USING(hash) WHERE pending_credits.hash = $1", [hash]).then(result => {
+            if (!result || result.length === 0) {
+                return null
+            } else {
+                return result[0]
+            }
+        })
     },
 
     lookupPendingByAddress: (address: string, settlement: boolean) => {
