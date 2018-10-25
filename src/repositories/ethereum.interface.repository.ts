@@ -46,27 +46,25 @@ const ethInterfaceRepo = {
             '0x' + fillBytes32(debtV).slice(2)
         ]
 
-        // const addressBufferC = ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), cSig[2], cSig[0], cSig[1]) )
-        // console.log('CREDITOR', addressBufferC.toString('hex'), creditor)
-        
-        // const addressBufferD = ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), dSig[2], dSig[0], dSig[1]) )
-        // console.log('DEBTOR', addressBufferD.toString('hex'), debtor)
-        
         const nonce = await new Promise((resolve, reject) => {
             web3.eth.getTransactionCount(`0x${serverConfig.default.executionAddress}`, (e, data) => e ? reject(e) : resolve(data))
         })
-
-        console.log(contractInstance.issueCredit)
         
+        const fullAmount = fillBytes32(web3.toHex(amount))
         const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, fillBytes32(web3.toHex(amount)), cSig, dSig, bytes32Memo)
-        console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, fillBytes32(web3.toHex(amount)), cSig, dSig, bytes32Memo)
+
+        console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, fullAmount, cSig, dSig, bytes32Memo)
+        console.log('UCAC, CREDITOR, and DEBTOR ADDRESSES ARE 42 CHARS:', `0x${ucac}`.length === 42, `0x${creditor}`.length === 42, `0x${debtor}`.length === 42)
+        console.log('CREDITOR ADDRESS MATCHES SIGNATURE:', ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), cSig[2], cSig[0], cSig[1]) ).toString('hex') === creditor)
+        console.log('DEBTOR ADDRESS MATCHES SIGNATURE:', ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), dSig[2], dSig[0], dSig[1]) ).toString('hex') === debtor)
+        console.log('FULL AMOUNT IS 66 CHARACTERS:', fullAmount.length === 66)
         
         const rawTx = {
             nonce: web3.toHex(nonce),
             gasPrice: web3.toHex(serverConfig.default.gasPrice),
             gasLimit: web3.toHex(serverConfig.default.maxGas),
             to: serverConfig.default.creditProtocolAddress,
-            from: `0x${serverConfig.default.executionAddress}`,
+            // from: serverConfig.default.executionAddress,
             data: callData
         }
         
