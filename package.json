@@ -25,7 +25,7 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "supertest": "^3.0.0",
-    "web3": "^0.2"
+    "web3": "^0.16"
   },
   "devDependencies": {
     "@types/es6-shim": "^0.31.37",
