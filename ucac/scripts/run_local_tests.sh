@@ -16,8 +16,8 @@ trap cleanup EXIT
 cp ../data/lndr-server.config.test.json ../data/lndr-server.config.json
 cp ../data/lndr-server.config.test.json ~/lndr-server.config.json
 
-# ganache_pid=`npm run ganache`
-# echo "Started ganache, pid ${ganache_pid}"
+ganache_pid=`npm run ganache`
+echo "Started ganache, pid ${ganache_pid}"
 
 npm run migrate
 

@@ -26,8 +26,6 @@ export default {
       throw new Error('Unrecognized UCAC address.')
     }
 
-    console.log('RECORD NUM', recordNum)
-
     const counterparty = submitter === creditor ? debtor : creditor
     const rawPending = await pendingRepository.lookupPending(hash)
 
@@ -57,14 +55,12 @@ export default {
         throw new Error('Signatures should not be the same for creditor and debtor.')
       }
     } else {
-      console.log(3)
       const processedRecord = calculateSettlementCreditRecord(serverConfig, record)
 
       const existingPending = await pendingRepository.lookupPendingByAddresses(creditor, debtor)
       if (recordNum === 0 && existingPending.length > 0) {
         throw new Error('A pending credit record already exists for the two users.')
       }
-      console.log(4)
 
       const existingPendingSettlement = await pendingRepository.lookupPendingSettlementByAddresses(creditor, debtor)
       if (recordNum === 0 && existingPendingSettlement.length > 0) {

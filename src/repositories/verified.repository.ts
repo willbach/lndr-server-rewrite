@@ -17,7 +17,7 @@ export default {
     getBalance: (address: string, ucac: string) => {
         const query = "SELECT ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE ) - ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING (hash) WHERE debtor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE )"
         
-        return db.any(query, [address, ucac]).then(result => result[0]['?column?'])
+        return db.any(query, [address, ucac]).then(result => Number(result[0]['?column?']))
     },
 
     getNonce: (address: string, counterparty: string) => {

@@ -35,8 +35,8 @@ const ethInterfaceRepo = {
         
         const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
 
-        console.log(creditorSignature, '\n', debtorSignature)
-        console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
+        // console.log(creditorSignature, '\n', debtorSignature)
+        // console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
         // console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
         // console.log('CALL DATA', callData)
         // console.log('EXEC NONCE', execNonce)
@@ -63,8 +63,6 @@ const ethInterfaceRepo = {
             })
         })
 
-        console.log('IS THE NONCE UPDATING?', nonceResult.toString(), memo, nonce)
-        
         return new Promise((resolve, reject) => {
             web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, data) {
                 if (err) {

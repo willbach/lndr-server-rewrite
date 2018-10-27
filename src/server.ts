@@ -51,7 +51,7 @@ app.post("/lend", transactionController.createTransaction) // :> ReqBody '[JSON]
 app.post("/borrow", transactionController.createTransaction) // :> ReqBody '[JSON] CreditRecord :> PostNoContent '[JSON] NoContent
 app.post("/multi_settlement", transactionController.submitMultiSettlement) // :> ReqBody '[JSON] [CreditRecord] :> PostNoContent '[JSON] NoContent
 app.post("/reject", transactionController.reject) // :> ReqBody '[JSON] RejectRequest :> PostNoContent '[JSON] NoContent
-app.get("/transactions/:address", transactionController.getTransactions) // :> QueryParam "user" Address :> Get '[JSON] [IssueCreditLog]
+app.get("/transactions", transactionController.getTransactions) // :> QueryParam "user" Address :> Get '[JSON] [IssueCreditLog]
 app.get("/pending/:address", transactionController.getPendingTransactions) // :> Capture "user" Address :> Get '[JSON] [CreditRecord]
 
 app.get("/nick/:address", userController.getNickname) // :> Capture "user" Address :> Get '[JSON] Text
