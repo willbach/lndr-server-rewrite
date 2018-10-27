@@ -9,8 +9,7 @@
   "scripts": {
     "migrate": "truffle migrate --network testrpc",
     "ganache": "ganache-cli --blocktime 1 -e 100000000000000000000 -m gravity top burden flip student usage spell purchase hundred improve check genre > /dev/null 2>&1 & echo $!",
-    "compile": "truffle compile",
-    "migrate-ganache": "truffle migrate --network ganache"
+    "compile": "truffle compile"
   },
   "repository": {
     "type": "git",
@@ -29,10 +28,9 @@
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
     "chai-bignumber": "2.0.2",
-    "credit-protocol": "https://github.com/blockmason/credit-protocol.git#604f885de0b2f8f585e3925bce940b1104749a21",
     "ganache-cli": "6.1.3",
-    "tce-contracts": "https://github.com/blockmason/tce-contracts.git#bfbf5e87577cecd7a06ed75cecfc52e7b1d90d77",
-    "truffle": "4.1.11",
-    "zeppelin-solidity": "1.10.0"
+    "tce-contracts": "https://github.com/blockmason/tce-contracts.git#26bf4e2daa68d80e9da1a1f16c95d87a8dcc41cc",
+    "truffle": "3.4.11",
+    "zeppelin-solidity": "1.3.0"
   }
 }

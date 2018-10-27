@@ -20,20 +20,39 @@ export default {
     }
   },
 
-  submitMultiSettlement: (req, res) => {
+  submitMultiSettlement: async(req, res) => {
     const transactions = req.body.map(tx => new CreditRecord(tx))
 
-    const signaturesMatch = transactions.reduce((acc, cur) => acc && cur.signatureMatches() ,true)
+    console.log('GOT EM', transactions)
 
+    const signaturesMatch = transactions.reduce((acc, cur) => acc && cur.signatureMatches(), true)
+    
     if (signaturesMatch) {
-      Promise.all(transactions.map((tx, index) => transactionService.submitCredit(tx, index)))
-        .then(() => {
-          res.status(204).end()
-        })
-        .catch(err => {
-          console.log('[POST] /multi_settlement', err)
-          res.status(400).json(err)
-        })
+      // new logic here
+      let index = 0
+      while(transactions.length > 0) {
+        let tx = transactions.shift()
+        const result = await transactionService.submitCredit(tx, index)
+          .catch(err => {
+            console.log('[POST] /multi_settlement', err)
+            res.status(400).json(err)
+          })
+        
+        console.log('RESULT SHOULD HAVE A GAP', result)
+
+        index++
+      }
+      
+      res.status(204).end()
+      
+      // Promise.all(transactions.map((tx, index) => transactionService.submitCredit(tx, index)))
+      //   .then(() => {
+      //     res.status(204).end()
+      //   })
+      //   .catch(err => {
+      //     console.log('[POST] /multi_settlement', err)
+      //     res.status(400).json(err)
+      //   })
     } else {
       res.status(401).json('Signature does not match')
     }
@@ -57,14 +76,14 @@ export default {
   },
 
   getTransactions: (req, res) => {
-      transactionService.getTransactions(req.params.address)
-        .then(data => {
-          res.json(data)
-        })
-        .catch(err => {
-          console.log('[GET] /transactions', err)
-          res.status(400).json(err)
-        })
+    transactionService.getTransactions(req.params.address)
+      .then(data => {
+        res.json(data)
+      })
+      .catch(err => {
+        console.log('[GET] /transactions', err)
+        res.status(400).json(err)
+      })
   },
 
   getPendingTransactions: (req, res) => {

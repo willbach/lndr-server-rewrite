@@ -19,7 +19,7 @@ cp ../data/lndr-server.config.test.json ~/lndr-server.config.json
 # ganache_pid=`npm run ganache`
 # echo "Started ganache, pid ${ganache_pid}"
 
-# npm run migrate
+npm run migrate
 
 createdb -U ${dbuser} ${dbname} && psql -U ${dbuser} ${dbname} -f ../src/db/create_tables.sql
 

@@ -5,44 +5,19 @@ import IssueCreditLog, { hashCreditLog } from '../dto/issue-credit-log'
 export default {
     getCounterParties: (address: string) => {
         return db.any('SELECT creditor FROM verified_credits WHERE debtor = $1 UNION SELECT debtor FROM verified_credits WHERE creditor = $1', [address])
+            .then(results => results.map(val => Object.values(val)[0]))
     },
 
     getTwoPartyBalance: (address: string, counterparty: string, ucac: string) => {
-        const query = "SELECT ( \
-            \  SELECT  \
-            \      COALESCE(SUM(verified_credits.amount), 0) \
-            \  FROM \
-            \      verified_credits LEFT JOIN settlements USING(hash) \
-            \  WHERE creditor = $1 AND debtor = $2 AND ucac = $3 AND verified IS DISTINCT FROM FALSE \
-            \ ) - ( \
-            \  SELECT \
-            \      COALESCE(SUM(verified_credits.amount), 0) \
-            \  FROM \
-            \      verified_credits LEFT JOIN settlements USING(hash) \
-            \  WHERE creditor = $2 AND debtor = $1 AND ucac = $3 AND verified IS DISTINCT FROM FALSE \
-            \ )"
+        const query = "SELECT ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $1 AND debtor = $2 AND ucac = $3 AND verified IS DISTINCT FROM FALSE) - (SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $2 AND debtor = $1 AND ucac = $3 AND verified IS DISTINCT FROM FALSE)"
         
-        return db.any(query, [address, counterparty, ucac])
+        return db.any(query, [address, counterparty, ucac]).then(result => result[0]['?column?'])
     },
 
     getBalance: (address: string, ucac: string) => {
-        const query = "SELECT ( \
-            \  SELECT \
-            \      COALESCE(SUM(verified_credits.amount), 0) \
-            \  FROM \
-            \      verified_credits LEFT JOIN settlements USING(hash) \
-            \  WHERE \
-            \      creditor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE \
-            \ ) - ( \
-            \  SELECT \
-            \      COALESCE(SUM(verified_credits.amount), 0) \
-            \  FROM \
-            \      verified_credits LEFT JOIN settlements USING (hash) \
-            \  WHERE \
-            \      debtor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE \
-            \ )"
+        const query = "SELECT ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE ) - ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING (hash) WHERE debtor = $1 AND ucac = $2 AND verified IS DISTINCT FROM FALSE )"
         
-        return db.any(query, [address, ucac])
+        return db.any(query, [address, ucac]).then(result => result[0]['?column?'])
     },
 
     getNonce: (address: string, counterparty: string) => {
@@ -52,8 +27,9 @@ export default {
     },
 
     insertCredit: (record: BilateralCreditRecord) => {
-        const {  } = record
-        return db.any("INSERT INTO verified_credits (creditor, debtor, amount, memo, nonce, hash, creditor_signature, debtor_signature, ucac, submitter) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", )
+        const { creditorSignature, debtorSignature } = record
+        const { creditor, debtor, amount, memo, nonce, hash, ucac, submitter } = record.creditRecord
+        return db.any("INSERT INTO verified_credits (creditor, debtor, amount, memo, nonce, hash, creditor_signature, debtor_signature, ucac, submitter) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", [creditor, debtor, amount, memo, nonce, hash, creditorSignature, debtorSignature, ucac, submitter])
     },
 
     insertCredits: (logs: [IssueCreditLog]) => {

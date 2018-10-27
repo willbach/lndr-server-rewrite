@@ -9,6 +9,8 @@ const serverConfig = require('../services/config.service')
 import BilateralCreditRecord from '../dto/bilateral-credit-record'
 import IssueCreditLog from '../dto/issue-credit-log'
 
+import { decomposeSignatureToBytes32, bignumToHexString, signatureToAddress } from '../utils/credit.protocol.util'
+
 // const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
 const rawAbi = fs.readFileSync(path.join(__dirname, '../../data/CreditProtocol.abi.json'), {encoding: 'utf8'})
@@ -17,60 +19,51 @@ const cpAbi = JSON.parse(rawAbi)
 const ethInterfaceRepo = {
     finalizeTransaction: async(record: BilateralCreditRecord) => {
         const { creditRecord, creditorSignature, debtorSignature } = record
-        const { creditor, debtor, amount, memo, ucac, hash } = creditRecord
+        const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
 
-        // serverConfig.default.incrementExecutionNonce()
-        const execNonce = serverConfig.default.executionNonce
+        const execNonce = await new Promise((resolve, reject) => web3.eth.getTransactionCount(`0x${serverConfig.default.executionAddress}`, (e, data) => e ? reject(e) : resolve(data)))
         const privateKeyBuffer = Buffer.from(serverConfig.default.executionPrivateKey.slice(2), 'hex')
-        const bytes32Memo = web3.toHex(memo)
         
         const CreditProtocolContract =  web3.eth.contract(cpAbi)
         const contractInstance:any = await new Promise((resolve, reject) => {
-            CreditProtocolContract.at(`0x${serverConfig.default.creditProtocolAddress}`, (e, data) => e ? reject(e) : resolve(data))
-        })
-
-        let credV = web3.toDecimal("0x" + creditorSignature.substr(128, 2))
-        if (credV < 27) credV += 27
-        credV = web3.toHex(credV)
-        let debtV = web3.toDecimal("0x" + debtorSignature.substr(128, 2))
-        if (debtV < 27) debtV += 27
-        debtV = web3.toHex(debtV)
-        const cSig: [any, any, any] = [
-            '0x' + creditorSignature.substr(0, 64),
-            '0x' + creditorSignature.substr(64, 64),
-            '0x' + fillBytes32(credV).slice(2)
-        ]
-        const dSig: [any, any, any] = [
-            '0x' + debtorSignature.substr(0, 64),
-            '0x' + debtorSignature.substr(64, 64),
-            '0x' + fillBytes32(debtV).slice(2)
-        ]
-
-        const nonce = await new Promise((resolve, reject) => {
-            web3.eth.getTransactionCount(`0x${serverConfig.default.executionAddress}`, (e, data) => e ? reject(e) : resolve(data))
+            CreditProtocolContract.at(serverConfig.default.creditProtocolAddress, (e, data) => e ? reject(e) : resolve(data))
         })
         
-        const fullAmount = fillBytes32(web3.toHex(amount))
-        const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, fillBytes32(web3.toHex(amount)), cSig, dSig, bytes32Memo)
-
-        console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, fullAmount, cSig, dSig, bytes32Memo)
-        console.log('UCAC, CREDITOR, and DEBTOR ADDRESSES ARE 42 CHARS:', `0x${ucac}`.length === 42, `0x${creditor}`.length === 42, `0x${debtor}`.length === 42)
-        console.log('CREDITOR ADDRESS MATCHES SIGNATURE:', ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), cSig[2], cSig[0], cSig[1]) ).toString('hex') === creditor)
-        console.log('DEBTOR ADDRESS MATCHES SIGNATURE:', ethUtil.pubToAddress( ethUtil.ecrecover(Buffer.from(hash, 'hex'), dSig[2], dSig[0], dSig[1]) ).toString('hex') === debtor)
-        console.log('FULL AMOUNT IS 66 CHARACTERS:', fullAmount.length === 66)
+        const bytes32Memo = web3.fromAscii(memo)
+        const cSig = decomposeSignatureToBytes32(creditorSignature)
+        const dSig = decomposeSignatureToBytes32(debtorSignature)
         
-        const rawTx = {
-            nonce: web3.toHex(nonce),
-            gasPrice: web3.toHex(serverConfig.default.gasPrice),
-            gasLimit: web3.toHex(serverConfig.default.maxGas),
+        const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
+
+        console.log(creditorSignature, '\n', debtorSignature)
+        console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
+        // console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
+        // console.log('CALL DATA', callData)
+        // console.log('EXEC NONCE', execNonce)
+
+        var rawTx = {
+            nonce: execNonce,
+            gasPrice: serverConfig.default.gasPrice,
+            gasLimit: serverConfig.default.maxGas,
             to: serverConfig.default.creditProtocolAddress,
-            // from: serverConfig.default.executionAddress,
-            data: callData
+            from: `0x${serverConfig.default.executionAddress}`,
+            data: callData,
+            value: '0x00',
+            chainId: 1
         }
-        
-        const tx = new Tx(rawTx)
+    
+        var tx = new Tx(rawTx)
         tx.sign(privateKeyBuffer)
-        const serializedTx = tx.serialize()
+        var serializedTx = tx.serialize()
+
+        const nonceResult = await new Promise((resolve, reject) => {
+            contractInstance.getNonce(`0x${creditor}`, `0x${debtor}`, (err, data) => {
+                if(err) reject(err)
+                else resolve(data)
+            })
+        })
+
+        console.log('IS THE NONCE UPDATING?', nonceResult.toString(), memo, nonce)
         
         return new Promise((resolve, reject) => {
             web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, data) {
@@ -103,11 +96,6 @@ const ethInterfaceRepo = {
         // const signedTx = await web3.eth.accounts.signTransaction(tx, serverConfig.default.executionPrivateKey)
         // const result = await web3.eth.sendSignedTransaction(signedTx.rawTransaction).on('receipt', console.log)
         // return result
-
-        function fillBytes32(ascii) {
-            // 66 instead of 64 to account for the '0x' prefix
-            return '0x' + '0'.repeat(66 - ascii.length) + ascii.slice(2);
-        }
     },
 
     lndrLogs: () => {

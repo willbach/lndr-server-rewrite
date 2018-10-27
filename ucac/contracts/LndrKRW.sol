@@ -1,7 +1,7 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.15;
 
 contract LndrKRW {
-    function allowTransaction(address, address, uint256) public pure returns (bool) {
+    function allowTransaction(address, address, uint256) public  returns (bool) {
         return true;
     }
 }

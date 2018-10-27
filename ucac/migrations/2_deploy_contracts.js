@@ -1,9 +1,9 @@
 const fs = require('fs');
 
-const CreditProtocol = artifacts.require('credit-protocol/contracts/CreditProtocol.sol');
+const CreditProtocol = artifacts.require('../../../credit-protocol/contracts/CreditProtocol.sol');
 const CPToken = artifacts.require('tce-contracts/contracts/CPToken.sol');
 const Lndr = artifacts.require('./Lndr.sol');
-const TestERC20 = artifacts.require('./TestERC20.sol');
+// const TestERC20 = artifacts.require('./TestERC20.sol');
 const LndrJPY = artifacts.require('./LndrJPY.sol');
 const LndrKRW = artifacts.require('./LndrKRW.sol');
 const LndrAUD = artifacts.require('./LndrAUD.sol');
@@ -80,9 +80,9 @@ module.exports = async function (deployer, network, accounts) {
         var lndrRubContract;
         var lndrTryContract;
         
-        await deployer.deploy(TestERC20, {from: web3.eth.accounts[0]});
-        testERC20Contract = await TestERC20.deployed();
-        console.log('TEST ERC20 CONTRACT ADDRESS', testERC20Contract.address);
+        // await deployer.deploy(TestERC20, {from: web3.eth.accounts[0]});
+        // testERC20Contract = await TestERC20.deployed();
+        // console.log('TEST ERC20 CONTRACT ADDRESS', testERC20Contract.address);
         await deployer.deploy(CPToken, {from: web3.eth.accounts[0]});
         cpTokenContract = await CPToken.deployed();
         await deployer.deploy( CreditProtocol

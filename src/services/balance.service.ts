@@ -8,11 +8,11 @@ export default {
 
   getTwoPartyBalance: async(address1: string, address2: string, currency: string) => {
     const ucac = await configService.getUcac(currency)
-    return verifiedRepository.getTwoPartyBalance(address1, address2, ucac)
+    return verifiedRepository.getTwoPartyBalance(address1, address2, ucac.slice(2))
   },
 
   getBalance: async(address: string, currency: string) => {
     const ucac = await configService.getUcac(currency)
-    return verifiedRepository.getBalance(address, ucac)
+    return verifiedRepository.getBalance(address, ucac.slice(2))
   }
 }

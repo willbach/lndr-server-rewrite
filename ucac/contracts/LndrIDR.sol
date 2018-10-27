@@ -1,9 +1,9 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.15;
 
 contract LndrIDR {
     uint constant decimals = 0;
 
-    function allowTransaction(address, address, uint256) public pure returns (bool) {
+    function allowTransaction(address, address, uint256) public  returns (bool) {
         return true;
     }
 }

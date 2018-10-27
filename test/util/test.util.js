@@ -1,30 +1,37 @@
 const ethUtil = require('ethereumjs-util')
 
 module.exports = {
-  sign: (hashElements, hexKey) => {
-    const buffers = hashElements.map((element) => {
-      if (element instanceof Buffer) {
-        return element
-      }
-      const regex = /^[0-9a-fA-F]+$/
-      if (regex.test(element)) {
-        return Buffer.from(element, 'hex')
-      }
-      return Buffer.from(element)
-    })
+  mobileSign(creditRecord, privateKey) {
+    var { ucac, creditor, debtor, amount, nonce } = creditRecord
 
-    const { r, s, v } = ethUtil.ecsign(
-      Buffer.concat(buffers),
-      Buffer.from(hexKey, 'hex')
+    var buffer = Buffer.concat([
+        this.hexToBuffer(ucac),
+        this.hexToBuffer(creditor),
+        this.hexToBuffer(debtor),
+        this.int32ToBuffer(amount),
+        this.int32ToBuffer(nonce)
+    ])
+    
+    var insideHash = ethUtil.sha3(buffer)
+
+    var privateKeyBuffer = Buffer.from(privateKey, 'hex')
+
+    var { r, s, v } = ethUtil.ecsign(
+        ethUtil.hashPersonalMessage(insideHash),
+        privateKeyBuffer
     )
 
-    return Buffer.concat([ r, s, Buffer.from([ v ]) ]).toString('hex')
+    return this.bufferToHex(
+        Buffer.concat(
+            [ r, s, Buffer.from([ v ]) ]
+        )
+    )
   },
 
   serverSign(hash, privateKeyHex) {
     const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
     const { r, s, v } = ethUtil.ecsign(
-      this.hexToBuffer(hash),
+      ethUtil.hashPersonalMessage(this.hexToBuffer(hash)),
       privateKeyBuffer
     )
 

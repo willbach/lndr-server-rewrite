@@ -5,7 +5,6 @@ const should = require('chai')
 
 const CreditProtocol = artifacts.require('credit-protocol/contracts/CreditProtocol.sol');
 const CPToken = artifacts.require('tce-contracts/contracts/CPToken.sol');
-const FriendInDebt = artifacts.require('./FriendInDebt.sol');
 
 const usd = web3.fromAscii("USD");
 const ucacId1 = web3.sha3("hi");

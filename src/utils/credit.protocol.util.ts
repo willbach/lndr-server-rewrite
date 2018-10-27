@@ -1,4 +1,8 @@
 const ethUtil = require('ethereumjs-util')
+const Web3 = require('web3')
+
+const web3 = new Web3()
+
 import CreditRecord from '../dto/credit-record'
 
 import { hexToBuffer, stringToBuffer, bufferToHex, int32ToBuffer } from './buffer.util'
@@ -21,7 +25,7 @@ export const verifySignature = (transaction: CreditRecord, signature: string) =>
 
 export const signatureToAddress = (hexHash: string, signature: string) => {
     const { v, r, s } = decomposeSignature(signature)
-    let hash = Buffer.from(hexHash, 'hex')
+    let hash = ethUtil.hashPersonalMessage(Buffer.from(hexHash, 'hex'))
     const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(hash, v, r, s) )
     return addressBuffer.toString('hex')
 }
@@ -35,21 +39,26 @@ export const decomposeSignature = (signature: string) => {
     return { v, r, s }
 }
 
-export const decomposeSignatureToBytes = (signature: string) => {
-    const signatureBuffer = hexToBuffer(signature)
-    const r = signatureBuffer.slice(0, 32)
-    const s = signatureBuffer.slice(32, 64)
-    const v = signatureBuffer.slice(64, 1)
+export const bignumToHexString = (num) => {
+    var a = num.toString(16);
+    return "0x" + '0'.repeat(64 - a.length) + a;
+}
 
-    return {r, s, v}
+export const decomposeSignatureToBytes32 = (hexSignature: string) => {
+    var res = {} as any
+    res.r = "0x" + hexSignature.substr(0, 64)
+    res.s = "0x" + hexSignature.substr(64, 64)
+    res.v = web3.toDecimal("0x" + hexSignature.substr(128, 2))
+    if (res.v < 27) res.v += 27;
+    res.v = bignumToHexString(web3.toBigNumber(res.v))
+
+    return res
 }
 
 export const privateToAddress = (privateKeyHex) => {
     const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
     return ethUtil.privateToAddress(privateKeyBuffer).toString('hex')
 }
-
-
 
 //   textToHostPreference :: Text -> W.HostPreference
 // textToHostPreference = fromString . T.unpack

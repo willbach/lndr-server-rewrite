@@ -92,10 +92,6 @@ export class ServerConfig {
         })
     }
 
-    incrementExecutionNonce() {
-        this.executionNonce = this.executionNonce + 1
-    }
-
     heartbeat() {
         setInterval(() => {
             //     -- update server config
