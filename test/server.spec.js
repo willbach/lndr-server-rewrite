@@ -65,35 +65,6 @@ const ucacAddrTRY = '0xfe2bbfbe30f835096ccbc9c12a38ac749d8402b2'
 const ucacAddr = '0x6804f48233f6ff2b468f7636560d525ca951931e'
 const ucacAddrVND = '0x815dcbb2008757a469d0daf8c310fae2fc41e96b'
 
-// loadUcacs = do
-//     (ConfigResponse ucacAddresses _ _ _ _) <- getConfig testUrl
-//     let Just ucacAddrAUD = M.lookup "AUD" ucacAddresses
-//         Just ucacAddrCAD = M.lookup "CAD" ucacAddresses
-//         Just ucacAddrCHF = M.lookup "CHF" ucacAddresses
-//         Just ucacAddrCNY = M.lookup "CNY" ucacAddresses
-//         Just ucacAddrDKK = M.lookup "DKK" ucacAddresses
-//         Just ucacAddrEUR = M.lookup "EUR" ucacAddresses
-//         Just ucacAddrGBP = M.lookup "GBP" ucacAddresses
-//         Just ucacAddrHKD = M.lookup "HKD" ucacAddresses
-//         Just ucacAddrIDR = M.lookup "IDR" ucacAddresses
-//         Just ucacAddrILS = M.lookup "ILS" ucacAddresses
-//         Just ucacAddrINR = M.lookup "INR" ucacAddresses
-//         Just ucacAddrJPY = M.lookup "JPY" ucacAddresses
-//         Just ucacAddrKRW = M.lookup "KRW" ucacAddresses
-//         Just ucacAddrMYR = M.lookup "MYR" ucacAddresses
-//         Just ucacAddrNOK = M.lookup "NOK" ucacAddresses
-//         Just ucacAddrNZD = M.lookup "NZD" ucacAddresses
-//         Just ucacAddrPLN = M.lookup "PLN" ucacAddresses
-//         Just ucacAddrRUB = M.lookup "RUB" ucacAddresses
-//         Just ucacAddrSEK = M.lookup "SEK" ucacAddresses
-//         Just ucacAddrSGD = M.lookup "SGD" ucacAddresses
-//         Just ucacAddrTHB = M.lookup "THB" ucacAddresses
-//         Just ucacAddrTRY = M.lookup "TRY" ucacAddresses
-//         Just ucacAddr = M.lookup "USD" ucacAddresses
-//         Just ucacAddrVND = M.lookup "VND" ucacAddresses
-//     return (ucacAddrAUD, ucacAddrCAD, ucacAddrCHF, ucacAddrCNY, ucacAddrDKK, ucacAddrEUR, ucacAddrGBP, ucacAddrHKD, ucacAddrIDR, ucacAddrILS, ucacAddrINR, ucacAddrJPY, ucacAddrKRW, ucacAddrMYR, ucacAddrNOK, ucacAddrNZD, ucacAddrPLN, ucacAddrRUB, ucacAddrSEK, ucacAddrSGD, ucacAddrTHB, ucacAddrTRY, ucacAddr, ucacAddrVND)
-
-
 describe('LNDR Server', function() {
   describe('Nicknames and Friends', function() {
     it('GET /user?nick= should respond with 404 if nick is not taken', function(done) {
@@ -630,7 +601,7 @@ describe('LNDR Server', function() {
       jpyCredit.signature = testUtil.mobileSign(jpyCredit, testPrivkey2)
 
       it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
-        request(server).post('/lend').send(jpyCredit).expect(204, done)
+        request(server).post('/borrow').send(jpyCredit).expect(204, done)
       })
 
       it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
@@ -652,78 +623,6 @@ describe('LNDR Server', function() {
           done()
         })
       })
-    })
-
-    xdescribe('Basic Settlement Test', function() {
-      const settlementCredit = { creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
-
-      let settleAmount = 0
-      // user5 submits pending settlement credit to user6
-      it('POST /lend should be successful', function(done) {
-        settlementCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit.hash)], testPrivkey5)
-        request(server).post('/lend').send(settlementCredit).expect(204, done)
-      })
-
-      it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
-        request(server).get('/pending_settlements/' + testAddress5).expect(200).then((res) => {
-          assert.equal(res.body.pendingSettlements.length, 1)
-          assert.equal(res.body.bilateralPendingSettlements.length, 0)
-          done()
-        })
-      })
-
-      it('POST /lend should be successful', function(done) {
-        settlementCredit.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit.hash)], testPrivkey6)
-        request(server).post('/lend').send(settlementCredit).expect(204, done)
-      })
-
-      it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
-        request(server).get('/pending_settlements/' + testAddress5).expect(200).then((res) => {
-          assert.equal(res.body.pendingSettlements.length, 0)
-          assert.equal(res.body.bilateralPendingSettlements.length, 1)
-          settleAmount = res.body.bilateralPendingSettlements[0].settlementAmount
-          done()
-        })
-      })
-
-      // user5 transfers eth to user6
-      // txHashE <- runWeb3 $ Eth.sendTransaction $ Call (Just testAddress5)
-      //                                                     testAddress6
-      //                                                     (Just 21000)
-      //                                                     Nothing
-      //                                                     settleAmount
-      //                                                     Nothing
-
-      // let txHash = fromRight (error "error sending eth") txHashE
-
-      // httpCode <- getTxHashFail testUrl creditHash
-      // assertEqual "404 upon hash not found error" 404 httpCode
-
-      // // user5 verifies that he has made the settlement credit
-      // httpCode <- verifySettlement testUrl creditHash txHash testPrivkey5
-      // assertEqual "verification success" 204 httpCode
-
-      // // ensure that tx registers in blockchain w/ a 10 second pause and
-      // // heartbeat has time to verify its validity
-      // threadDelay (20 * 10 ^ 6)
-
-      // (SettlementsResponse pendingSettlements bilateralPendingSettlements) <- getPendingSettlements testUrl testAddress5
-      // assertEqual "post-verification: get pending settlements success" 0 (length pendingSettlements)
-      // assertEqual "post-verification: get bilateral pending settlements success" 0 (length bilateralPendingSettlements)
-
-      // balance <- getBalance testUrl testAddress5 "USD"
-      // assertEqual "user5's total balance is correct" testAmount balance
-
-      // balance <- getBalance testUrl testAddress6 "USD"
-      // assertEqual "user5's total balance is correct" (-testAmount) balance
-
-      // gottenTxHash <- getTxHash testUrl creditHash
-      // assertEqual "successful txHash retrieval" txHash (addHexPrefix gottenTxHash)
-    
-    })
-
-    xdescribe('DAI Settlement Test', function() {
-      //copy from above
     })
 
     describe('PayPal Settlement Test', function() {
@@ -969,78 +868,5 @@ describe('LNDR Server', function() {
         done()
       })
     })
-  })
-
-  xdescribe('Multi Settlement', function() {
-    const settlementCredit1 = { creditor: testAddress9, debtor: testAddress0, amount: 2939, memo: 'advanced settlement 1', submitter: testAddress9, nonce: 0, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
-    const settlementCredit2 = { creditor: testAddress0, debtor: testAddress9, amount: 1939, memo: 'advanced settlement 2', submitter: testAddress9, nonce: 1, hash: "", signature: "", ucac:ucacAddrJPY, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
-
-    let settleAmount1 = 0, settleAmount2 = 0
-    
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function(done) {
-      settlementCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit1.hash)], testPrivkey9)
-      settlementCredit2.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit2.hash)], testPrivkey9)
-      request(server).post('/multi_settlement').send([settlementCredit1, settlementCredit2]).expect(204, done)
-    })
-
-    it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
-      request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
-        assert.equal(res.body.pendingSettlements.length, 2)
-        assert.equal(res.body.bilateralPendingSettlements.length, 0)
-        done()
-      })
-    })
-
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function(done) {
-      settlementCredit1.submitter = testAddress0
-      settlementCredit2.submitter = testAddress0
-      settlementCredit1.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit1.hash)], testPrivkey0)
-      settlementCredit2.signature = testUtil.sign([bufferUtil.hexToBuffer(settlementCredit2.hash)], testPrivkey0)
-      request(server).post('/multi_settlement').send([settlementCredit1, settlementCredit2]).expect(204, done)
-    })
-
-    it('GET /pending_settlements should have 2 bilateral pending settlements for user 9', function(done) {
-      request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
-        assert.equal(res.body.pendingSettlements.length, 0)
-        assert.equal(res.body.bilateralPendingSettlements.length, 2)
-        settleAmount1 = res.body.bilateralPendingSettlements[0].settlementAmount
-        settleAmount2 = res.body.bilateralPendingSettlements[1].settlementAmount
-        done()
-      })
-    })
-
-      // user5 transfers eth to user6
-      // txHashE <- runWeb3 $ Eth.sendTransaction $ Call (Just testAddress9)
-      //                                                     testAddress0
-      //                                                     (Just 21000)
-      //                                                     Nothing
-      //                                                     settleAmount
-      //                                                     Nothing
-
-      // let txHash = fromRight (error "error sending eth") txHashE
-
-      // httpCode <- getTxHashFail testUrl creditHash
-      // assertEqual "404 upon hash not found error" 404 httpCode
-
-      // // user5 verifies that he has made the settlement credit
-      // httpCode <- verifySettlement testUrl creditHash txHash testPrivkey5
-      // assertEqual "verification success" 204 httpCode
-
-      // // ensure that tx registers in blockchain w/ a 10 second pause and
-      // // heartbeat has time to verify its validity
-      // threadDelay (20 * 10 ^ 6)
-
-      // (SettlementsResponse pendingSettlements bilateralPendingSettlements) <- getPendingSettlements testUrl testAddress5
-      // assertEqual "post-verification: get pending settlements success" 0 (length pendingSettlements)
-      // assertEqual "post-verification: get bilateral pending settlements success" 0 (length bilateralPendingSettlements)
-
-      // balance <- getBalance testUrl testAddress5 "USD"
-      // assertEqual "user5's total balance is correct" testAmount balance
-
-      // balance <- getBalance testUrl testAddress6 "USD"
-      // assertEqual "user5's total balance is correct" (-testAmount) balance
-
-      // gottenTxHash <- getTxHash testUrl creditHash
-      // assertEqual "successful txHash retrieval" txHash (addHexPrefix gottenTxHash)
   })
 })

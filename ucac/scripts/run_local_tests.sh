@@ -25,6 +25,14 @@ createdb -U ${dbuser} ${dbname} && psql -U ${dbuser} ${dbname} -f ../src/db/crea
 
 cd .. && mocha ./test/server.spec.js --exit
 
+
+
+
+# tests for settlements
+# lndr_server_pid=`node ./build/server.js &`
+
+# mocha ./test/settlement.spec.js --exit
+
 # yarn start &
 # lndr_server_pid=$!
 # echo "Started lndr-server, pid ${ganache_pid}"

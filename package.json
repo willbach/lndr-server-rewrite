@@ -9,7 +9,9 @@
   "scripts": {
     "test": "./scripts/test.sh",
     "typescript": "tsc -w --skipLibCheck",
-    "start": "nodemon build/server.js"
+    "start": "nodemon build/server.js",
+    "db": "dropdb -U test lndrtest && createdb -U test lndrtest && psql -U test lndrtest -f ./src/db/create_tables.sql",
+    "ganache": "ganache-cli -e 100000000000000000000 -m gravity top burden flip student usage spell purchase hundred improve check genre"
   },
   "dependencies": {
     "assert": "^1.4.1",
