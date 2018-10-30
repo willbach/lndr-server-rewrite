@@ -3,7 +3,7 @@ import CreditRecord from '../dto/credit-record'
 
 export default {
     lookupPending: (hash: string) => {
-        return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount, settlements.blocknumber FROM pending_credits LEFT JOIN settlements USING(hash) WHERE pending_credits.hash = $1", [hash]).then(result => {
+        return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount as settlement_amount, settlements.blocknumber FROM pending_credits LEFT JOIN settlements USING(hash) WHERE pending_credits.hash = $1", [hash]).then(result => {
             if (!result || result.length === 0) {
                 return null
             } else {
@@ -14,7 +14,7 @@ export default {
 
     lookupPendingByAddress: (address: string, settlement: boolean) => {
         if (settlement) {
-            return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount, settlements.blocknumber FROM pending_credits JOIN settlements USING(hash) WHERE (creditor = $1 OR debtor = $1)", [address])
+            return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlements.currency, settlements.amount as settlement_amount, settlements.blocknumber FROM pending_credits JOIN settlements USING(hash) WHERE (creditor = $1 OR debtor = $1)", [address])
         } else {
             return db.any("SELECT creditor, debtor, pending_credits.amount, memo, submitter, nonce, pending_credits.hash, signature, ucac, settlement_currency FROM pending_credits LEFT JOIN settlements USING(hash) WHERE (creditor = $1 OR debtor = $1) AND settlements.hash IS NULL", [address])
         }
@@ -37,8 +37,8 @@ export default {
     },
 
     insertSettlementData: (record: CreditRecord) => {
-        const { hash, amount, settlementCurrency, settlementBlocknumber } = record
-        return db.any("INSERT INTO settlements (hash, amount, currency, blocknumber, verified) VALUES ($1,$2,$3,$4,FALSE)", [hash, amount, settlementCurrency, settlementBlocknumber])
+        const { hash, settlementAmount, settlementCurrency, settlementBlocknumber } = record
+        return db.any("INSERT INTO settlements (hash, amount, currency, blocknumber, verified) VALUES ($1,$2,$3,$4,FALSE)", [hash, settlementAmount, settlementCurrency, settlementBlocknumber])
     },
 
     insertPending: (record: CreditRecord) => {

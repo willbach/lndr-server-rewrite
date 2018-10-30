@@ -9,6 +9,7 @@ export default {
     if (transaction.signatureMatches()) {
       transactionService.submitCredit(transaction, 0)
         .then(() => {
+          console.log(6)
           res.status(204).end()
         })
         .catch(err => {

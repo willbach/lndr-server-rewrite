@@ -58,11 +58,12 @@ export default {
             db.any("DELETE FROM verified_credits WHERE hash IN ($1:csv)", [hashes]),
             db.any("DELETE FROM pending_credits WHERE hash IN ($1:csv)", [hashes]),
             db.any("DELETE FROM settlements WHERE hash IN ($1:csv)", [hashes])
-        ])
+        ]).catch(err => console.log(err))
     },
 
     txHashesToVerify: () => {
         return db.any("SELECT tx_hash FROM settlements WHERE tx_hash IS NOT NULL AND verified = FALSE GROUP BY tx_hash")
+            .then(data => data.map(tx => tx.tx_hash))
     },
 
     txHashByCreditHash: (creditHash: string) => {
@@ -70,21 +71,21 @@ export default {
             if (result.length === 0) {
                 return null
             } else {
-                return result[0]
+                return result[0].tx_hash
             }
         })
     },
 
     updateSettlementTxHash: (txHash: string, creditHash: string) => {
-        return db.any("UPDATE settlements SET  tx_hash = $1 WHERE hash = $2", [txHash, creditHash])
+        return db.any("UPDATE settlements SET tx_hash = $1 WHERE hash = $2", [txHash, creditHash]).catch(err => console.log(err))
     },
 
     lookupSettlementCreditByAddress: (address: string) => {
-        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE (creditor = $1 OR debtor = $1) AND verified = FALSE", [address])
+        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount as settlement_amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE (creditor = $1 OR debtor = $1) AND verified = FALSE", [address])
     },
 
     lookupCreditByHash: (hash: string) => {
-        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE verified_credits.hash = $1", [hash]).then(result => {
+        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount as settlement_amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM verified_credits JOIN settlements USING(hash) WHERE verified_credits.hash = $1", [hash]).then(result => {
             if (result.length === 0) {
                 return null
             } else {
@@ -94,9 +95,10 @@ export default {
     },
 
     lookupCreditsByTxHash: (txHash: string) => {
-        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM settlements JOIN verified_credits USING(hash) WHERE settlements.tx_hash = $1", [txHash])
+        return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount as settlement_amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM settlements JOIN verified_credits USING(hash) WHERE settlements.tx_hash = $1", [txHash])
             .then(credits => {
-                return new BilateralCreditRecord(credits[0])
+                console.log(credits)
+                return credits.map(credit => new BilateralCreditRecord(credit))
             })
     },
 

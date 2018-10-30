@@ -24,22 +24,11 @@ export default class CreditRecord {
     this.memo = data.memo
     this.nonce = data.nonce
     this.signature = data.signature
-    this.amount = data.amount
+    this.amount = Number(data.amount)
     this.hash = data.hash
-
-    if (type === 'settlement') {
-      this.settlementCurrency = data.settlement_currency
-      this.settlementAmount = data.settlement_amount
-      this.settlementBlocknumber = data.settlement_blocknumber
-
-    } else if(type === 'pendingTx') {
-      this.settlementCurrency = data.settlement_currency
-      this.settlementAmount = data.settlementAmount
-      this.settlementBlocknumber = data.settlementBlocknumber
-
-    } else { //this is for incoming records
-      this.settlementCurrency = data.settlement_currency
-    }
+    this.settlementBlocknumber = Number(type === 'settlement' ? data.blocknumber : data.settlementBlocknumber)
+    this.settlementAmount = Number(type === 'settlement' ? data.settlement_amount : data.settlementAmount)
+    this.settlementCurrency = type === 'settlement' ? data.currency : data.settlementCurrency
   }
 
   strip0x(address) {

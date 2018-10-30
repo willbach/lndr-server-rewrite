@@ -20,14 +20,14 @@ export default class BilateralCreditRecord {
         hash: data.hash,
         signature: data.creditor_signature,
         ucac: data.ucac,
-        settlementCurrency: data.settlement_currency,
-        settlementAmount: data.settlement_amount,
-        settlementBlocknumber: data.settlement_blocknumber,
+        settlementCurrency: data.currency,
+        settlementAmount: data.settlement_amount ? data.settlement_amount : data.settlementAmount,
+        settlementBlocknumber: data.blocknumber,
       })
     }
 
-    this.creditorSignature = data.creditorSignature
-    this.debtorSignature = data.debtorSignature
+    this.creditorSignature = data.creditorSignature ? data.creditorSignature : data.creditor_signature
+    this.debtorSignature = data.debtorSignature ? data.debtorSignature : data.debtor_signature
     this.txHash = data.tx_hash
   }
 }

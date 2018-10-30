@@ -8,6 +8,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /pending_settlements', err)
         res.status(400).json(err)
       })
   },
@@ -21,6 +22,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /verify_settlement', err)
           res.status(400).json(err)
         })
     } else {
@@ -34,6 +36,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /tx_hash', err)
         res.status(400).json(err)
       })
   }

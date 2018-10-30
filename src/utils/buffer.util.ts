@@ -23,3 +23,10 @@ export const int32ToBuffer = (value) => {
     const stringValue = `${x}${x}${x}${x}`.replace(new RegExp(`.{${hexValue.length}}$`), hexValue)
     return Buffer.from(stringValue, 'hex')
 }
+
+export const stripHexPrefix = (value) => {
+    if (value.substr(0, 2) === '0x') {
+        return value.slice(2)
+    }
+    return value
+}

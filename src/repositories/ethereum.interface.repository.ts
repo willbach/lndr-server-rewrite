@@ -10,6 +10,7 @@ import BilateralCreditRecord from '../dto/bilateral-credit-record'
 import IssueCreditLog from '../dto/issue-credit-log'
 
 import { decomposeSignatureToBytes32, bignumToHexString, signatureToAddress } from '../utils/credit.protocol.util'
+import { stripHexPrefix } from '../utils/buffer.util'
 
 // const web3 = new Web3(new Web3.providers.HttpProvider(serverConfig.web3Url))
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
@@ -18,6 +19,7 @@ const cpAbi = JSON.parse(rawAbi)
 
 const ethInterfaceRepo = {
     finalizeTransaction: async(record: BilateralCreditRecord) => {
+        console.log('RECORD TO VERIFY', record)
         const { creditRecord, creditorSignature, debtorSignature } = record
         const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
 
@@ -35,11 +37,11 @@ const ethInterfaceRepo = {
         
         const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
 
-        // console.log(creditorSignature, '\n', debtorSignature)
-        // console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
-        // console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
-        // console.log('CALL DATA', callData)
-        // console.log('EXEC NONCE', execNonce)
+        console.log(creditorSignature, '\n', debtorSignature)
+        console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
+        console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
+        console.log('CALL DATA', callData)
+        console.log('EXEC NONCE', execNonce)
 
         var rawTx = {
             nonce: execNonce,
@@ -56,12 +58,12 @@ const ethInterfaceRepo = {
         tx.sign(privateKeyBuffer)
         var serializedTx = tx.serialize()
 
-        const nonceResult = await new Promise((resolve, reject) => {
-            contractInstance.getNonce(`0x${creditor}`, `0x${debtor}`, (err, data) => {
-                if(err) reject(err)
-                else resolve(data)
-            })
-        })
+        // const nonceResult = await new Promise((resolve, reject) => {
+        //     contractInstance.getNonce(`0x${creditor}`, `0x${debtor}`, (err, data) => {
+        //         if(err) reject(err)
+        //         else resolve(data)
+        //     })
+        // })
 
         return new Promise((resolve, reject) => {
             web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, data) {
@@ -72,28 +74,6 @@ const ethInterfaceRepo = {
                 }
             })
         })
-
-        // WEB3 v1.0.0 BETA
-        
-        // const cpContract = new web3.eth.Contract(cpAbi, serverConfig.default.creditProtocolAddress)
-        // const callData = cpContract.methods.issueCredit('0x' + ucac, '0x' + creditor, '0x' + debtor, bignumToHexString(amount), cSig, dSig, bytes32Memo).encodeABI()
-        // const tx = {
-        //     // nonce: execNonce,
-        //     from: '0x' + serverConfig.default.executionAddress,
-        //     gasPrice: web3.utils.numberToHex(serverConfig.default.gasPrice * 10000),
-        //     gas: web3.utils.numberToHex(serverConfig.default.maxGas * 20),
-        //     gasLimit: web3.utils.numberToHex(serverConfig.default.maxGas * 20),
-        //     to: serverConfig.default.creditProtocolAddress,
-        //     value: '0',
-        //     chainId: 1, // 1 is the mainnet chainId
-        //     data: callData
-        // }
-
-        // console.log(tx)
-
-        // const signedTx = await web3.eth.accounts.signTransaction(tx, serverConfig.default.executionPrivateKey)
-        // const result = await web3.eth.sendSignedTransaction(signedTx.rawTransaction).on('receipt', console.log)
-        // return result
     },
 
     lndrLogs: () => {
@@ -139,54 +119,40 @@ const ethInterfaceRepo = {
         console.log('This was only used on the CLI ', log)
     },
 
-    verifySettlementPayment: async(txHash: string, creditor: string, debtor: string, amount: number) => {
-        const tx = await web3.eth.getTransaction(txHash)
+    verifySettlementPayment: async(txHash: string, creditor: string, debtor: string, amount: number, settlementCurrency: string) => {
+        const tx = await new Promise((resolve, reject) => web3.eth.getTransaction(`0x${txHash}`, (e, data) => e ? reject(e) : resolve(data))) as any
 
         if (!tx || !tx.value) {
             throw new Error('transaction not found, tx_hash: ' + txHash)
         }
 
-        const creditorMatch = creditor === tx.from.slice(2)
-        const debtorMatch = debtor === tx.to.slice(2)
-        const valueMatch = amount === parseInt(tx.value.slice(2), 16)
+        let creditorMatch = creditor === stripHexPrefix(tx.from), debtorMatch, valueMatch
+
+        if (settlementCurrency === 'DAI') {
+            debtorMatch = debtor === tx.input.slice(34, 74)
+            valueMatch = parseInt(tx.input.slice(114), 16) === amount
+        } else {
+            debtorMatch = debtor === stripHexPrefix(tx.to)
+            valueMatch = amount === tx.value.toNumber()
+        }
 
         if (!creditorMatch) {
-            throw new Error('Bad from match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+            throw new Error('Bad from match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
         } else if (!debtorMatch) {
-            throw new Error('Bad to match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+            throw new Error('Bad to match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
         } else if (!valueMatch) {
-            throw new Error('Bad value match, hash: ' + txHash + ' tx value: ' + String(parseInt(tx.value.slice(2), 16)) + ' settlement value: ' + amount)
+            throw new Error('Bad value match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
         }
 
         return true
-        // -- | Verify that a settlement payment was made using a 'txHash' corresponding to
-        // -- an Ethereum transaction on the blockchain and the associated addresses and
-        // -- eth settlement amount.
-        // verifySettlementPayment :: TransactionHash -> Address -> Address -> Integer -> LndrHandler ()
-        // verifySettlementPayment txHash creditorAddr debtorAddr settlementValue = do
-        //     transactionM <- lndrWeb3 . Eth.getTransactionByHash $ addHexPrefix txHash
-        //     case transactionM of
-        //         (Just transaction) ->
-        //             let fromMatch = txFrom transaction == creditorAddr
-        //                 toMatch = txTo transaction == Just debtorAddr
-        //                 transactionValue = hexToInteger $ txValue transaction
-        //                 valueMatch = transactionValue == settlementValue
-        //             in case (fromMatch, toMatch, valueMatch) of
-        //                 (False, _, _)      -> lndrError $ "Bad from match, hash: " ++ T.unpack txHash
-        //                 (_, False, _)      -> lndrError $ "Bad to match, hash: " ++ T.unpack txHash
-        //                 (_, _, False)      -> lndrError $ "Bad value match, hash: " ++ T.unpack txHash
-        //                                                 ++ "tx value: " ++ show transactionValue
-        //                                                 ++ ", settlementValue: " ++ show settlementValue
-        //                 (True, True, True) -> pure ()
-        //         Nothing -> lndrError $ "transaction not found, tx_hash: " ++ T.unpack txHash
     },
 
     currentBlockNumber: () => {
-        return web3.eth.getBlockNumber()
+        return new Promise((resolve, reject) => web3.eth.getBlockNumber((e, data) => e ? reject(e) : resolve(data))) as any
     },
 
     currentExecutionNonce: () => {
-        return web3.eth.getTransactionCount(serverConfig.default.executionAddress)
+        return new Promise((resolve, reject) => web3.eth.getTransactionCount(serverConfig.default.executionAddress, (e, data) => e ? reject(e) : resolve(data))) as any
     }
 }
 

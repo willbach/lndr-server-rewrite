@@ -7,9 +7,36 @@ const configObj = JSON.parse(config)
 import { privateToAddress } from '../utils/credit.protocol.util'
 import ConfigResponse from '../dto/config-response'
 import BilateralCreditRecord from '../dto/bilateral-credit-record'
-import networkStatistics from '../repositories/network.statistics.repository'
+import heartbeatRepo from '../repositories/heartbeat.repository'
 import ethInterfaceRepo from '../repositories/ethereum.interface.repository'
 import verifiedRepo from '../repositories/verified.repository'
+
+const ethereumPrices = {
+    AUD: '250',
+    CAD: '200',
+    CNY: '1600',
+    CHF: '250',
+    DKK: '1500',
+    EUR: '200',
+    GBP: '200',
+    HKD: '1600',
+    IDR: '2800000',
+    ILS: '800',
+    INR: '13500',
+    JPY: '20000',
+    KRW: '200000',
+    MYR: '800',
+    NOK: '2000',
+    NZD: '250',
+    PLN: '750',
+    RUB: '13000',
+    SEK: '2000',
+    SGD: '270',
+    THB: '6400',
+    TRY: '800',
+    USD: '200',
+    VND: '4500000',
+}
 
 export class ServerConfig {
     lndrUcacAddrs: any
@@ -54,7 +81,7 @@ export class ServerConfig {
         this.dbHost = data.db.host
         this.dbPort = data.db.port
         this.gasPrice = data['gas-price']
-        this.ethereumPrices = {}
+        this.ethereumPrices = ethereumPrices
         this.maxGas = data['max-gas']
         this.latestBlockNumber = 0
         this.heartbeatInterval = data['heartbeat-interval']
@@ -114,14 +141,14 @@ export class ServerConfig {
 
     async updateServerConfig() {
         try {
-            const prices = await networkStatistics.queryEtheruemPrices()
-            this.ethereumPrices = prices
+            const prices = await heartbeatRepo.queryEtheruemPrices()
+            this.ethereumPrices = prices.data.rates
         } catch(e) {
             console.log('Error getting Ethereum prices:', e)
         }
 
         try {
-            const currentGasPrice = await networkStatistics.querySafelow()
+            const currentGasPrice = await heartbeatRepo.querySafelow()
             this.gasPrice = currentGasPrice
         } catch(e) {
             console.log('Error getting gas price:', e)
@@ -133,14 +160,10 @@ export class ServerConfig {
         } catch(e) {
             console.log('Error getting latest blocknumber:', e)
         }
-        //     currentPricesM <- runMaybeT queryEtheruemPrices
-        //     currentGasPriceM <- runMaybeT querySafelow
-        //     blockNumberM <- runMaybeT $ currentBlockNumber config
     }
 
     deleteExpiredSettlements() {
         verifiedRepo.deleteExpiredSettlementsAndAssociatedCredits()
-        //     void . liftIO $ withResource pool Db.deleteExpiredSettlementsAndAssociatedCredits
     }
 
     async verifySettlementsWithTxHash() {
@@ -148,11 +171,9 @@ export class ServerConfig {
             const txHashes = await verifiedRepo.txHashesToVerify()
             const creditsToVerify = await Promise.all(txHashes.map(hash => verifiedRepo.lookupCreditsByTxHash(hash)))
             await Promise.all(creditsToVerify.map(creditList => this.verifyRecords(creditList)))
-
         } catch(e) {
             console.log('Error confirming settlements: ', e)
         }
-
         // verifySettlementsWithTxHash :: LndrHandler ()
         // verifySettlementsWithTxHash = do
         //     (ServerState pool configTVar _) <- ask
@@ -164,6 +185,8 @@ export class ServerConfig {
 
     async verifyRecords(credits: any /*[BilateralCreditRecord]*/) {
         const firstRecord = credits[0]
+
+        console.log(firstRecord)
 
         if (!firstRecord || !firstRecord.txHash) {
             throw new Error('Bilateral Settlement Record does not have txHash.')
@@ -188,15 +211,27 @@ export class ServerConfig {
         const settlementCreditor = creditorAmount > debtorAmount ? firstCreditor : firstDebtor
         const settlementDebtor = creditorAmount > debtorAmount ? firstDebtor : firstCreditor
 
-        await ethInterfaceRepo.verifySettlementPayment(firstRecord.txHash, settlementCreditor, settlementDebtor, Math.abs(creditorAmount - debtorAmount))
+        await ethInterfaceRepo.verifySettlementPayment(firstRecord.txHash, settlementCreditor, settlementDebtor, Math.abs(creditorAmount - debtorAmount), firstRecord.creditRecord.settlementCurrency)
+
+        console.log(1)
 
         await Promise.all(creditRecords.map(record => verifiedRepo.verifyCreditByHash(record.hash)))
 
+        console.log(2, creditRecords)
+
         const results = await Promise.all(credits.map(record => ethInterfaceRepo.finalizeTransaction(record)))
+
+        console.log(3)
 
         const compiledResults = results.reduce(() => 'blah')
 
         console.log('WEB3: ', compiledResults)
+
+
+
+
+
+
 
         // verifyRecords :: [BilateralCreditRecord] -> LndrHandler ()
         // verifyRecords records = do

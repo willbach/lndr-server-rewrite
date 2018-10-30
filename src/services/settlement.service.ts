@@ -5,6 +5,8 @@ import VerifySettlementRequest from '../dto/verify-settlement-request'
 import CreditRecord from '../dto/credit-record'
 import BilateralCreditRecord from '../dto/bilateral-credit-record'
 
+import { stripHexPrefix } from '../utils/buffer.util'
+
 export default {
   getPendingSettlements: async(address: string) => {
     const rawUnilateralSettlements = await pendingRepository.lookupPendingByAddress(address, true)
@@ -17,7 +19,7 @@ export default {
   },
 
   verifySettlement: (verification: VerifySettlementRequest) => {
-    return verifiedRepository.updateSettlementTxHash(verification.txHash, verification.creditHash)
+    return verifiedRepository.updateSettlementTxHash(stripHexPrefix(verification.txHash), verification.creditHash)
   },
 
   getTxHash: (creditHash: string) => {
