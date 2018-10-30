@@ -17,6 +17,6 @@ export default class VerificationStatusRequest {
     ])
     const hexHash = bufferToHex(ethUtil.sha3(hashBuffer))
     
-    return signatureToAddress(hexHash, this.verificationStatusSignature) === this.user
+    return signatureToAddress(hexHash, this.verificationStatusSignature, false) === this.user
   }
 }

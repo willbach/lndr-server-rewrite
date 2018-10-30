@@ -1,7 +1,7 @@
 const ethUtil = require('ethereumjs-util')
 
 module.exports = {
-  mobileSign(creditRecord, privateKey) {
+  signCredit(creditRecord, privateKey, hashPersonalMessage = true) {
     var { ucac, creditor, debtor, amount, nonce } = creditRecord
 
     var buffer = Buffer.concat([
@@ -31,7 +31,7 @@ module.exports = {
   serverSign(hash, privateKeyHex) {
     const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
     const { r, s, v } = ethUtil.ecsign(
-      ethUtil.hashPersonalMessage(this.hexToBuffer(hash)),
+      this.hexToBuffer(hash),
       privateKeyBuffer
     )
 

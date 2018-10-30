@@ -12,6 +12,6 @@ export default class ProfilePhotoRequest {
 
   getAddress() {
     const hashBuffer = ethUtil.sha3(this.image)
-    return signatureToAddress(hashBuffer.toString('hex'), this.signature)
+    return signatureToAddress(hashBuffer.toString('hex'), this.signature, false)
   }
 }

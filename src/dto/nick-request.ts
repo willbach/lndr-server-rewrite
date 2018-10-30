@@ -20,6 +20,6 @@ export default class NickRequest {
     ])
     const hash = bufferToHex(ethUtil.sha3(hashBuffer))
     
-    return signatureToAddress(hash, this.signature) === this.addr
+    return signatureToAddress(hash, this.signature, false) === this.addr
   }
 }

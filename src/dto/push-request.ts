@@ -23,6 +23,6 @@ export default class PushRequest {
     ])
     const hexHash = bufferToHex(ethUtil.sha3(hashBuffer))
 
-    return signatureToAddress(hexHash, this.signature) === this.address
+    return signatureToAddress(hexHash, this.signature, false) === this.address
   }
 }

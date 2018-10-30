@@ -23,6 +23,6 @@ export default class VerifySettlementRequest {
     ])
     const hexHash = bufferToHex(ethUtil.sha3(hashBuffer))
 
-    return signatureToAddress(hexHash, this.signature) === this.creditorAddress
+    return signatureToAddress(hexHash, this.signature, false) === this.creditorAddress
   }
 }

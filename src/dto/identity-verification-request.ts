@@ -33,6 +33,6 @@ export default class IdentityVerificationRequest {
       return false
     }
 
-    return signatureToAddress(hexHash, this.identitySignature) === this.externalUserId
+    return signatureToAddress(hexHash, this.identitySignature, false) === this.externalUserId
   }
 }

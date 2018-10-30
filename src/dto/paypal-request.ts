@@ -20,6 +20,6 @@ export default class PayPalRequest {
     ])
     const hexHash = bufferToHex(ethUtil.sha3(hashBuffer))
 
-    return signatureToAddress(hexHash, this.paypalRequestSignature) === this.requestor
+    return signatureToAddress(hexHash, this.paypalRequestSignature, false) === this.requestor
   }
 }

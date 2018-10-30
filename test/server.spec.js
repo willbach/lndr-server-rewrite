@@ -457,7 +457,7 @@ describe('LNDR Server', function() {
         testUtil.int32ToBuffer(usdCredit.nonce)
       ])
       usdCredit.hash = testUtil.bufferToHex(ethUtil.sha3(usdBuffer))
-      usdCredit.signature = testUtil.mobileSign(usdCredit, testPrivkey1)
+      usdCredit.signature = testUtil.signCredit(usdCredit, testPrivkey1)
 
       const badBuffer = Buffer.concat([
         testUtil.hexToBuffer(badCredit.ucac),
@@ -467,7 +467,7 @@ describe('LNDR Server', function() {
         testUtil.int32ToBuffer(badCredit.nonce)
       ])
       badCredit.hash = testUtil.bufferToHex(ethUtil.sha3(badBuffer))
-      badCredit.signature = testUtil.mobileSign(badCredit, testPrivkey1)
+      badCredit.signature = testUtil.signCredit(badCredit, testPrivkey1)
 
       // testCase "lend money to friend" basicLendTest
       // user1 fails to submit pending credit to himself
@@ -511,7 +511,7 @@ describe('LNDR Server', function() {
 
       it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         usdCredit.submitter = testAddress2
-        usdCredit.signature = testUtil.mobileSign(usdCredit, testPrivkey2)
+        usdCredit.signature = testUtil.signCredit(usdCredit, testPrivkey2)
 
         request(server).post('/lend').send(usdCredit).expect(204, done)
       })
@@ -598,7 +598,7 @@ describe('LNDR Server', function() {
         testUtil.int32ToBuffer(jpyCredit.nonce)
       ])
       jpyCredit.hash = testUtil.bufferToHex(ethUtil.sha3(jpyBuffer))
-      jpyCredit.signature = testUtil.mobileSign(jpyCredit, testPrivkey2)
+      jpyCredit.signature = testUtil.signCredit(jpyCredit, testPrivkey2)
 
       it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         request(server).post('/borrow').send(jpyCredit).expect(204, done)
@@ -606,7 +606,7 @@ describe('LNDR Server', function() {
 
       it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         jpyCredit.submitter = testAddress1
-        jpyCredit.signature = testUtil.mobileSign(jpyCredit, testPrivkey1)
+        jpyCredit.signature = testUtil.signCredit(jpyCredit, testPrivkey1)
         request(server).post('/lend').send(jpyCredit).expect(204, done)
       })
 
@@ -636,7 +636,7 @@ describe('LNDR Server', function() {
         testUtil.int32ToBuffer(paypalCredit.nonce)
       ])
       paypalCredit.hash = testUtil.bufferToHex(ethUtil.sha3(paypalBuffer))
-      paypalCredit.signature = testUtil.mobileSign(paypalCredit, testPrivkey10)
+      paypalCredit.signature = testUtil.signCredit(paypalCredit, testPrivkey10)
 
       it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
         request(server).post('/lend').send(paypalCredit).expect(204, done)
@@ -657,7 +657,7 @@ describe('LNDR Server', function() {
       })
 
       it('POST /reject user 2 should reject credit from user 1', function(done) {
-        const rejectRequest = { hash: paypalCredit.hash, signature: testUtil.mobileSign(paypalCredit, testPrivkey11) }
+        const rejectRequest = { hash: paypalCredit.hash, signature: testUtil.serverSign(paypalCredit.hash, testPrivkey11) }
         request(server).post('/reject').send(rejectRequest).expect(204, done)
       })
 
@@ -674,7 +674,7 @@ describe('LNDR Server', function() {
 
       it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
         paypalCredit.submitter = testAddress11
-        paypalCredit.signature = testUtil.mobileSign(paypalCredit, testPrivkey11)
+        paypalCredit.signature = testUtil.signCredit(paypalCredit, testPrivkey11)
         request(server).post('/borrow').send(paypalCredit).expect(204, done)
       })
 
@@ -735,7 +735,7 @@ describe('LNDR Server', function() {
       testUtil.int32ToBuffer(krwCredit1.nonce),
     ])
     krwCredit1.hash = testUtil.bufferToHex(ethUtil.sha3(buffer1))
-    krwCredit1.signature = testUtil.mobileSign(krwCredit1, testPrivkey7)
+    krwCredit1.signature = testUtil.signCredit(krwCredit1, testPrivkey7)
 
     const buffer2 = Buffer.concat([
       testUtil.hexToBuffer(krwCredit2.ucac),
@@ -745,7 +745,7 @@ describe('LNDR Server', function() {
       testUtil.int32ToBuffer(krwCredit2.nonce),
     ])
     krwCredit2.hash = testUtil.bufferToHex(ethUtil.sha3(buffer2))
-    krwCredit2.signature = testUtil.mobileSign(krwCredit2, testPrivkey7)
+    krwCredit2.signature = testUtil.signCredit(krwCredit2, testPrivkey7)
 
     it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function(done) {
       this.timeout(8000)
@@ -767,12 +767,12 @@ describe('LNDR Server', function() {
     })
 
     it('POST /reject user 2 should reject credit1 from user 1', function(done) {
-      const rejectRequest = { hash: krwCredit1.hash, signature: testUtil.mobileSign(krwCredit1, testPrivkey8) }
+      const rejectRequest = { hash: krwCredit1.hash, signature: testUtil.serverSign(krwCredit1.hash, testPrivkey8) }
       request(server).post('/reject').send(rejectRequest).expect(204, done)
     })
 
     it('POST /reject user 2 should reject credit2 from user 1', function(done) {
-      const rejectRequest = { hash: krwCredit2.hash, signature: testUtil.mobileSign(krwCredit2, testPrivkey8) }
+      const rejectRequest = { hash: krwCredit2.hash, signature: testUtil.serverSign(krwCredit2.hash, testPrivkey8) }
       request(server).post('/reject').send(rejectRequest).expect(204, done)
     })
 
@@ -791,9 +791,9 @@ describe('LNDR Server', function() {
     it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function(done) {
       this.timeout(8000)
       krwCredit1.submitter = testAddress8
-      krwCredit1.signature = testUtil.mobileSign(krwCredit1, testPrivkey8)
+      krwCredit1.signature = testUtil.signCredit(krwCredit1, testPrivkey8)
       krwCredit2.submitter = testAddress8
-      krwCredit2.signature = testUtil.mobileSign(krwCredit2, testPrivkey8)
+      krwCredit2.signature = testUtil.signCredit(krwCredit2, testPrivkey8)
       request(server).post('/multi_settlement').send([krwCredit1, krwCredit2]).expect(204, done)
     })
 

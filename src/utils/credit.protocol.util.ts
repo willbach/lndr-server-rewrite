@@ -23,9 +23,9 @@ export const verifySignature = (transaction: CreditRecord, signature: string) =>
     return transaction.creditor === sigAddress || transaction.debtor === sigAddress
 }
 
-export const signatureToAddress = (hexHash: string, signature: string) => {
+export const signatureToAddress = (hexHash: string, signature: string, hashPersonalMessage = true) => {
     const { v, r, s } = decomposeSignature(signature)
-    let hash = ethUtil.hashPersonalMessage(Buffer.from(hexHash, 'hex'))
+    let hash = hashPersonalMessage ? ethUtil.hashPersonalMessage(Buffer.from(hexHash, 'hex')) : hexToBuffer(hexHash)
     const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(hash, v, r, s) )
     return addressBuffer.toString('hex')
 }

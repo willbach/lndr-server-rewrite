@@ -10,6 +10,6 @@ export default class RejectRequest {
   }
 
   getAddress() {
-    return signatureToAddress(this.hash, this.signature)
+    return signatureToAddress(this.hash, this.signature, false)
   }
 }
