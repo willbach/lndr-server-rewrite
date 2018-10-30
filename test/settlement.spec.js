@@ -337,7 +337,7 @@ describe('Settlement Tests', function() {
       })
     })
   
-    xit('should confirm that DAI was sent and then verify the settlement', function(done) {
+    it('should confirm that DAI was sent and then verify the settlement', function(done) {
       this.timeout(6000)
 
       const getNonce = new Promise((resolve, reject) => {
@@ -346,7 +346,7 @@ describe('Settlement Tests', function() {
 
       getNonce.then(function(nonce) {
         // const daiAddress = 'c75b5bcd5f9a9c09e7aa1c3b1ea71e18f6c81f6e'
-        const testDaiAddress = 'f5cad0db6415a71a5bc67403c87b56b629b4ddaa'
+        const testDaiAddress = '2839b617726d08d1fe59e279571d35c738d72948'
         const ERC20Contract = web3.eth.contract(ERC20_ABI)
         
         const resolveContract = new Promise((resolve, reject) => {
@@ -356,8 +356,6 @@ describe('Settlement Tests', function() {
         resolveContract.then(function(daiContract) {
           const txData = daiContract.transfer.getData(`0x${settlementCredit.debtor}`, settleAmount)
 
-          console.log(nonce, testAddress4, testAddress3, settleAmount, txData, daiContract)
-          
           var rawTx = {
             nonce,
             gasPrice: 20000,
@@ -386,11 +384,11 @@ describe('Settlement Tests', function() {
             const hashBuffer = Buffer.concat([
               testUtil.hexToBuffer(settlementCredit.hash),
               testUtil.hexToBuffer(txHash),
-              testUtil.hexToBuffer(testAddress3)
+              testUtil.hexToBuffer(testAddress4)
             ])
             const newHash = testUtil.bufferToHex(ethUtil.sha3(hashBuffer))
-            const signature = testUtil.serverSign(newHash, testPrivkey5)
-            const verifySettlementRequest = { creditHash: settlementCredit.hash, txHash, creditorAddress: testAddress3, signature }
+            const signature = testUtil.serverSign(newHash, testPrivkey4)
+            const verifySettlementRequest = { creditHash: settlementCredit.hash, txHash, creditorAddress: testAddress4, signature }
         
             const options = {
               method: 'POST',
@@ -419,7 +417,7 @@ describe('Settlement Tests', function() {
                 json: true // Automatically stringifies the body to JSON
               }
               request(options2).then(res => {
-                assert.equal(res, 5000)
+                assert.equal(res, -5000)
               })
         
               const options3 = {
@@ -427,7 +425,7 @@ describe('Settlement Tests', function() {
                 json: true // Automatically stringifies the body to JSON
               }
               request(options3).then(res => {
-                assert.equal(res, 5000)
+                assert.equal(res, -5000)
               })
         
               const options4 = {
@@ -435,7 +433,7 @@ describe('Settlement Tests', function() {
                 json: true // Automatically stringifies the body to JSON
               }
               request(options4).then(res => {
-                assert.equal(res, -5000)
+                assert.equal(res, 5000)
               })
         
               const options5 = {
@@ -443,7 +441,7 @@ describe('Settlement Tests', function() {
                 json: true // Automatically stringifies the body to JSON
               }
               request(options5).then(res => {
-                assert.equal(res, -5000)
+                assert.equal(res, 5000)
               })
         
               const options6 = {

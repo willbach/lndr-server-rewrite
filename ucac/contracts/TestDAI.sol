@@ -3,7 +3,7 @@ pragma solidity ^0.4.15;
 // ----------------------------------------------------------------------------
 // '0Fucks' token contract
 //
-// Deployed to : 0x50BCE46FF7F6b92e4D383e4Ada3ecbA9e86d1292
+// Deployed to : 0x90A3D2aFf8C3c60614D40B034FEc77B465AD92D5
 // Symbol      : DAI
 // Name        : DAI Token
 // Total supply: 100000000
@@ -114,7 +114,7 @@ contract TestDAI is ERC20Interface, Owned, SafeMath {
         name = "DAI Token";
         decimals = 18;
         _totalSupply = 100000000000000000000000000;
-        balances[0x50BCE46FF7F6b92e4D383e4Ada3ecbA9e86d1292] = _totalSupply;
+        balances[0x90A3D2aFf8C3c60614D40B034FEc77B465AD92D5] = _totalSupply;
     }
 
 

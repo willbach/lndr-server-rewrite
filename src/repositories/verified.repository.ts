@@ -11,7 +11,7 @@ export default {
     getTwoPartyBalance: (address: string, counterparty: string, ucac: string) => {
         const query = "SELECT ( SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $1 AND debtor = $2 AND ucac = $3 AND verified IS DISTINCT FROM FALSE) - (SELECT COALESCE(SUM(verified_credits.amount), 0) FROM verified_credits LEFT JOIN settlements USING(hash) WHERE creditor = $2 AND debtor = $1 AND ucac = $3 AND verified IS DISTINCT FROM FALSE)"
         
-        return db.any(query, [address, counterparty, ucac]).then(result => result[0]['?column?'])
+        return db.any(query, [address, counterparty, ucac]).then(result => Number(result[0]['?column?']))
     },
 
     getBalance: (address: string, ucac: string) => {

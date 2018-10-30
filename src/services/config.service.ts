@@ -186,8 +186,6 @@ export class ServerConfig {
     async verifyRecords(credits: any /*[BilateralCreditRecord]*/) {
         const firstRecord = credits[0]
 
-        console.log('FIRST RECORD', firstRecord)
-
         if (!firstRecord || !firstRecord.txHash) {
             throw new Error('Bilateral Settlement Record does not have txHash.')
         }
