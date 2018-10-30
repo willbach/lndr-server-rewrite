@@ -9,7 +9,6 @@ export default {
     if (transaction.signatureMatches()) {
       transactionService.submitCredit(transaction, 0)
         .then(() => {
-          console.log(6)
           res.status(204).end()
         })
         .catch(err => {
@@ -17,6 +16,7 @@ export default {
           res.status(400).json(err)
         })
     } else {
+      console.log('[POST] /lend or /borrow', 'Signature does not match')
       res.status(401).json('Signature does not match')
     }
   },
@@ -27,8 +27,6 @@ export default {
     const signaturesMatch = transactions.reduce((acc, cur) => acc && cur.signatureMatches(), true)
     
     if (signaturesMatch) {
-      // new logic here
-
       let index = 0
       while (transactions.length > 0) {
         let tx = transactions.shift()

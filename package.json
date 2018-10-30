@@ -7,11 +7,13 @@
   "author": "Will Galebach <willbach@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "./scripts/test.sh",
+    "test": "cd ucac && ./scripts/run_local_tests.sh && cd ..",
     "typescript": "tsc -w --skipLibCheck",
     "start": "nodemon build/server.js",
-    "db": "dropdb -U test lndrtest && createdb -U test lndrtest && psql -U test lndrtest -f ./src/db/create_tables.sql",
-    "ganache": "ganache-cli -e 100000000000000000000 -m gravity top burden flip student usage spell purchase hundred improve check genre"
+    "create-db": "createdb -U test lndrtest && psql -U test lndrtest -f ./src/db/create_tables.sql",
+    "drop-db": "dropdb -U test lndrtest",
+    "ganache": "ganache-cli -e 100000000000000000000 -m gravity top burden flip student usage spell purchase hundred improve check genre",
+    "settlement-tests": "cd ucac && ./scripts/run_local_settlement_tests.sh && cd .."
   },
   "dependencies": {
     "assert": "^1.4.1",

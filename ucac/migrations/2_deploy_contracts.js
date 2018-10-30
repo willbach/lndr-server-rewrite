@@ -3,7 +3,6 @@ const fs = require('fs');
 const CreditProtocol = artifacts.require('../../../credit-protocol/contracts/CreditProtocol.sol');
 const CPToken = artifacts.require('tce-contracts/contracts/CPToken.sol');
 const Lndr = artifacts.require('./Lndr.sol');
-// const TestERC20 = artifacts.require('./TestERC20.sol');
 const LndrJPY = artifacts.require('./LndrJPY.sol');
 const LndrKRW = artifacts.require('./LndrKRW.sol');
 const LndrAUD = artifacts.require('./LndrAUD.sol');
@@ -26,6 +25,7 @@ const LndrVND = artifacts.require('./LndrVND.sol');
 const LndrILS = artifacts.require('./LndrILS.sol');
 const LndrRUB = artifacts.require('./LndrRUB.sol');
 const LndrTRY = artifacts.require('./LndrTRY.sol');
+const TestDAI = artifacts.require('./TestDAI.sol');
 
 module.exports = async function (deployer, network, accounts) {
     if (network == "gethtest" || network == "testrpc" || network == "ganache") {
@@ -55,7 +55,6 @@ module.exports = async function (deployer, network, accounts) {
         const mintAmount = web3.toBigNumber(web3.toWei(20000))
         var cpTokenContract;
         var creditProtocolContract;
-        var testERC20Contract;
         var lndrUsdContract;
         var lndrJpyContract;
         var lndrKrwContract;
@@ -80,9 +79,6 @@ module.exports = async function (deployer, network, accounts) {
         var lndrRubContract;
         var lndrTryContract;
         
-        // await deployer.deploy(TestERC20, {from: web3.eth.accounts[0]});
-        // testERC20Contract = await TestERC20.deployed();
-        // console.log('TEST ERC20 CONTRACT ADDRESS', testERC20Contract.address);
         await deployer.deploy(CPToken, {from: web3.eth.accounts[0]});
         cpTokenContract = await CPToken.deployed();
         await deployer.deploy( CreditProtocol
@@ -144,97 +140,149 @@ module.exports = async function (deployer, network, accounts) {
         await cpTokenContract.finishMinting({from: web3.eth.accounts[0]});
         await cpTokenContract.endSale({from: web3.eth.accounts[0]});
         await cpTokenContract.approve(creditProtocolContract.address, web3.toWei(300), {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrUsdContract.address
-                                                       , usd
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrJpyContract.address
-                                                       , jpy
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrKrwContract.address
-                                                       , krw
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrAudContract.address
-                                                       , aud
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrCadContract.address
-                                                       , cad
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrChfContract.address
-                                                       , chf
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrCnyContract.address
-                                                       , cny
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrDkkContract.address
-                                                       , dkk
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrEurContract.address
-                                                       , eur
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrGbpContract.address
-                                                       , gbp
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrHkdContract.address
-                                                       , hkd
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrNokContract.address
-                                                       , nok
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrNzdContract.address
-                                                       , nzd
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrPlnContract.address
-                                                       , pln
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrSekContract.address
-                                                       , sek
-                                                       , web3.toWei(100)
-                                                       , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrIdrContract.address
-                                                        , idr
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrMyrContract.address
-                                                        , myr
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrSgdContract.address
-                                                        , sgd
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrThbContract.address
-                                                        , thb
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrVndContract.address
-                                                        , vnd
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrIlsContract.address
-                                                        , ils
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrRubContract.address
-                                                        , rub
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
-        await creditProtocolContract.createAndStakeUcac( lndrTryContract.address
-                                                        , Try
-                                                        , web3.toWei(100)
-                                                        , {from: web3.eth.accounts[0]});
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrUsdContract.address
+                                                           , usd
+                                                           , web3.toWei(100)
+                                                           , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrJpyContract.address
+            , jpy
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrKrwContract.address
+            , krw
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrAudContract.address
+            , aud
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrCadContract.address
+            , cad
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrChfContract.address
+            , chf
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrCnyContract.address
+            , cny
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrDkkContract.address
+            , dkk
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrEurContract.address
+            , eur
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrGbpContract.address
+            , gbp
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrHkdContract.address
+            , hkd
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrNokContract.address
+            , nok
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrNzdContract.address
+            , nzd
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrPlnContract.address
+            , pln
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrSekContract.address
+            , sek
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrIdrContract.address
+             , idr
+             , web3.toWei(100)
+             , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrMyrContract.address
+            , myr
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrSgdContract.address
+            , sgd
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrThbContract.address
+            , thb
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrVndContract.address
+            , vnd
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrIlsContract.address
+            , ils
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrRubContract.address
+            , rub
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+        try {
+            await creditProtocolContract.createAndStakeUcac( lndrTryContract.address
+            , Try
+            , web3.toWei(100)
+            , {from: web3.eth.accounts[0]});
+        } catch (e) {}
+
+        var testDaiContract;
+        await deployer.deploy(TestDAI, {from: web3.eth.accounts[0]});
+        testDaiContract = await TestDAI.deployed();
+        console.log('TEST DAI CONTRACT ADDRESS', testDaiContract.address);
+    
     }
 };

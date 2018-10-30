@@ -186,7 +186,7 @@ export class ServerConfig {
     async verifyRecords(credits: any /*[BilateralCreditRecord]*/) {
         const firstRecord = credits[0]
 
-        console.log(firstRecord)
+        console.log('FIRST RECORD', firstRecord)
 
         if (!firstRecord || !firstRecord.txHash) {
             throw new Error('Bilateral Settlement Record does not have txHash.')
@@ -213,23 +213,11 @@ export class ServerConfig {
 
         await ethInterfaceRepo.verifySettlementPayment(firstRecord.txHash, settlementCreditor, settlementDebtor, Math.abs(creditorAmount - debtorAmount), firstRecord.creditRecord.settlementCurrency)
 
-        console.log(1)
-
         await Promise.all(creditRecords.map(record => verifiedRepo.verifyCreditByHash(record.hash)))
-
-        console.log(2, creditRecords)
 
         const results = await Promise.all(credits.map(record => ethInterfaceRepo.finalizeTransaction(record)))
 
-        console.log(3)
-
-        const compiledResults = results.reduce(() => 'blah')
-
-        console.log('WEB3: ', compiledResults)
-
-
-
-
+        console.log('SETTLEMENTS WEB3: ', results)
 
 
 

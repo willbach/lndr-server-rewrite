@@ -19,7 +19,6 @@ const cpAbi = JSON.parse(rawAbi)
 
 const ethInterfaceRepo = {
     finalizeTransaction: async(record: BilateralCreditRecord) => {
-        console.log('RECORD TO VERIFY', record)
         const { creditRecord, creditorSignature, debtorSignature } = record
         const { creditor, debtor, amount, memo, ucac, nonce } = creditRecord
 
@@ -37,11 +36,11 @@ const ethInterfaceRepo = {
         
         const callData = contractInstance.issueCredit.getData(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
 
-        console.log(creditorSignature, '\n', debtorSignature)
-        console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
-        console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
-        console.log('CALL DATA', callData)
-        console.log('EXEC NONCE', execNonce)
+        // console.log(creditorSignature, '\n', debtorSignature)
+        // console.log('SIGNATURES MATCH:', creditor === signatureToAddress(creditRecord.hash, creditorSignature), debtor === signatureToAddress(creditRecord.hash, debtorSignature))
+        // console.log(`0x${ucac}`, `0x${creditor}`, `0x${debtor}`, bignumToHexString(amount), [cSig.r, cSig.s, cSig.v], [dSig.r, dSig.s, dSig.v], bytes32Memo)
+        // console.log('CALL DATA', callData)
+        // console.log('EXEC NONCE', execNonce)
 
         var rawTx = {
             nonce: execNonce,
@@ -126,22 +125,24 @@ const ethInterfaceRepo = {
             throw new Error('transaction not found, tx_hash: ' + txHash)
         }
 
-        let creditorMatch = creditor === stripHexPrefix(tx.from), debtorMatch, valueMatch
+        let creditorMatch = creditor === stripHexPrefix(tx.from), debtorMatch, valueMatch, txValue
 
         if (settlementCurrency === 'DAI') {
+            txValue = parseInt(tx.input.slice(114), 16)
             debtorMatch = debtor === tx.input.slice(34, 74)
-            valueMatch = parseInt(tx.input.slice(114), 16) === amount
+            valueMatch = txValue === amount
         } else {
+            txValue = tx.value.toNumber()
             debtorMatch = debtor === stripHexPrefix(tx.to)
-            valueMatch = amount === tx.value.toNumber()
+            valueMatch = amount === txValue
         }
 
         if (!creditorMatch) {
-            throw new Error('Bad from match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
+            throw new Error('Bad from match, hash: ' + txHash + ' tx value: ' + txValue + ' settlement value: ' + amount)
         } else if (!debtorMatch) {
-            throw new Error('Bad to match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
+            throw new Error('Bad to match, hash: ' + txHash + ' tx value: ' + txValue + ' settlement value: ' + amount)
         } else if (!valueMatch) {
-            throw new Error('Bad value match, hash: ' + txHash + ' tx value: ' + parseInt(tx.value.toString()) + ' settlement value: ' + amount)
+            throw new Error('Bad value match, hash: ' + txHash + ' tx value: ' + txValue + ' settlement value: ' + amount)
         }
 
         return true

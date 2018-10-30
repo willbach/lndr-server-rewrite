@@ -97,7 +97,6 @@ export default {
     lookupCreditsByTxHash: (txHash: string) => {
         return db.any("SELECT creditor, debtor, verified_credits.amount, memo, submitter, nonce, verified_credits.hash, ucac, creditor_signature, debtor_signature, settlements.amount as settlement_amount, settlements.currency, settlements.blocknumber, settlements.tx_hash FROM settlements JOIN verified_credits USING(hash) WHERE settlements.tx_hash = $1", [txHash])
             .then(credits => {
-                console.log(credits)
                 return credits.map(credit => new BilateralCreditRecord(credit))
             })
     },
