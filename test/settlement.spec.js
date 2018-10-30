@@ -71,61 +71,21 @@ const ucacAddrVND = '0x815dcbb2008757a469d0daf8c310fae2fc41e96b'
 describe('Settlement Tests', function() {
 
   describe('Basic Settlement Test', function() {
-    // const settlementCredit = { creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
+    const settlementCredit = { creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'ETH test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
   
-    // const settlementBuffer = Buffer.concat([
-    //   testUtil.hexToBuffer(settlementCredit.ucac),
-    //   testUtil.hexToBuffer(settlementCredit.creditor),
-    //   testUtil.hexToBuffer(settlementCredit.debtor),
-    //   testUtil.int32ToBuffer(settlementCredit.amount),
-    //   testUtil.int32ToBuffer(settlementCredit.nonce)
-    // ])
-    // settlementCredit.hash = testUtil.bufferToHex(ethUtil.sha3(settlementBuffer))
-    // settlementCredit.signature = testUtil.mobileSign(settlementCredit, testPrivkey5)
-
-    const jpyCredit = { creditor: testAddress1, debtor: testAddress2, amount: 20000, memo: "JPY test 1", submitter: testAddress2, nonce: 1, hash: "", signature: "", ucac: ucacAddrJPY, settlementCurrency: undefined, settlementAmount: undefined, settlementBlocknumber: undefined }
-
-    const jpyBuffer = Buffer.concat([
-      testUtil.hexToBuffer(jpyCredit.ucac),
-      testUtil.hexToBuffer(jpyCredit.creditor),
-      testUtil.hexToBuffer(jpyCredit.debtor),
-      testUtil.int32ToBuffer(jpyCredit.amount),
-      testUtil.int32ToBuffer(jpyCredit.nonce)
+    const settlementBuffer = Buffer.concat([
+      testUtil.hexToBuffer(settlementCredit.ucac),
+      testUtil.hexToBuffer(settlementCredit.creditor),
+      testUtil.hexToBuffer(settlementCredit.debtor),
+      testUtil.int32ToBuffer(settlementCredit.amount),
+      testUtil.int32ToBuffer(settlementCredit.nonce)
     ])
-    jpyCredit.hash = testUtil.bufferToHex(ethUtil.sha3(jpyBuffer))
-    jpyCredit.signature = testUtil.mobileSign(jpyCredit, testPrivkey2)
+    settlementCredit.hash = testUtil.bufferToHex(ethUtil.sha3(settlementBuffer))
+    settlementCredit.signature = testUtil.mobileSign(settlementCredit, testPrivkey5)
 
-    it('POST /lend should return 204 for a successful credit submission from user 1', function(done) {
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/lend',
-        body: jpyCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
-      request(options).then(response => {
-        console.log(response)
-        done()
-      })
-    })
-
-    it('POST /lend should return 204 for a successful credit submission from user 2', function(done) {
-      jpyCredit.submitter = testAddress1
-      jpyCredit.signature = testUtil.mobileSign(jpyCredit, testPrivkey1)
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/lend',
-        body: jpyCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
-      request(options).then(response => {
-        console.log(response)
-        done()
-      })
-    })
-  
     let settleAmount = 0
     // user5 submits pending settlement credit to user6
-    xit('POST /lend should be successful', function(done) {
+    it('POST /lend should be successful', function(done) {
       const options = {
         method: 'POST',
         uri: 'http://localhost:7402/lend',
@@ -138,7 +98,7 @@ describe('Settlement Tests', function() {
       })
     })
   
-    xit('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
       const options = {
         uri: 'http://localhost:7402/pending_settlements/' + testAddress5,
         json: true // Automatically stringifies the body to JSON
@@ -150,7 +110,7 @@ describe('Settlement Tests', function() {
       })
     })
   
-    xit('POST /lend should be successful', function(done) {
+    it('POST /lend should be successful', function(done) {
       settlementCredit.submitter = testAddress6
       settlementCredit.signature = testUtil.mobileSign(settlementCredit, testPrivkey6)
   
@@ -166,7 +126,7 @@ describe('Settlement Tests', function() {
       })
     })
   
-    xit('GET /pending_settlements should have 1 pending settlement for user 6', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 6', function(done) {
       const options = {
         uri: 'http://localhost:7402/pending_settlements/' + testAddress5,
         json: true // Automatically stringifies the body to JSON
@@ -180,7 +140,7 @@ describe('Settlement Tests', function() {
       })
     })
   
-    xit('should confirm that ETH was sent and then verify the settlement', async() => {
+    it('should confirm that ETH was sent and then verify the settlement', async() => {
       const nonce = await new Promise((resolve, reject) => {
         web3.eth.getTransactionCount(`0x${testAddress5}`, (e, data) => e ? reject(e) : resolve(data))
       })
