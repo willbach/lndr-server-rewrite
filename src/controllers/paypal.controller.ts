@@ -11,6 +11,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /request_paypal', err)
           res.status(400).json(err)
         })
     } else {
@@ -24,7 +25,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
-        console.log('[POST] /request_paypal', err)
+        console.log('[GET] /request_paypal', err)
         res.status(400).json(err)
       })
   },
@@ -38,6 +39,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /remove_paypal_request', err)
           res.status(400).json(err)
         })
     } else {

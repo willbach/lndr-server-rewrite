@@ -14,7 +14,7 @@ export default {
             if (result.length === 0) {
                 return null
             } else {
-                return result[0]
+                return result[0].nickname
             }
         })
     },
@@ -24,7 +24,7 @@ export default {
             if (result.length === 0) {
                 return null
             } else {
-                return result[0]
+                return result[0].email
             }
         })
     }, 

@@ -12,7 +12,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
-          // console.log('[POST] /nick', err)
+          console.log('[POST] /nick', err)
           res.status(400).json(err)
         })
     } else {
@@ -26,7 +26,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
-        // console.log('[GET] /nick', err)
+        console.log('[GET] /nick', err)
         res.status(400).json(err)
       })
   },
@@ -37,7 +37,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
-        // console.log('[GET] /search_nicknames', err)
+        console.log('[GET] /search_nicknames', err)
         res.status(400).json(err)
       })
   },
@@ -50,7 +50,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
-          // console.log('[POST] /email', err)
+          console.log('[POST] /email', err)
           res.status(400).json(err)
         })
     } else {
@@ -64,6 +64,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /email', err)
         res.status(400).json(err)
       })
   },
@@ -75,6 +76,7 @@ export default {
         res.status(204).end()
       })
       .catch(err => {
+        console.log('[POST] /profile_photo', err)
         res.status(400).json(err)
       })
   },
@@ -89,7 +91,7 @@ export default {
         }
       })
       .catch(err => {
-        // console.log('[GET] /user: ', err)
+        console.log('[GET] /user: ', err)
         res.status(400).json(err)
       })
   }

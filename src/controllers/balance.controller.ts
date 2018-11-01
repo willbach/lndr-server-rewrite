@@ -7,6 +7,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /counterparties', err)
         res.status(400).json(err)
       })
   },
@@ -18,6 +19,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /balance', err)
         res.status(400).json(err)
       })
   },
@@ -28,6 +30,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /balance', err)
         res.status(400).json(err)
       })
   }

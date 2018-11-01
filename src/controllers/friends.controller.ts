@@ -7,6 +7,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /friends', err)
         res.status(400).json(err)
       })
   },
@@ -17,6 +18,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /friend_requests', err)
         res.status(400).json(err)
       })
   },
@@ -27,6 +29,7 @@ export default {
         res.json(data)
       })
       .catch(err => {
+        console.log('[GET] /outbound_friend_requests', err)
         res.status(400).json(err)
       })
   },
@@ -37,6 +40,7 @@ export default {
         res.status(204).end()
       })
       .catch(err => {
+        console.log('[POST] /add_friends', err)
         res.status(400).json(err)
       })
   },
@@ -47,6 +51,7 @@ export default {
         res.status(204).end()
       })
       .catch(err => {
+        console.log('[POST] /remove_friends', err)
         res.status(400).json(err)
       })
   }

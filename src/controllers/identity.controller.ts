@@ -16,6 +16,7 @@ export default {
           res.json(data)
         })
         .catch(err => {
+          console.log('[POST] /verify_identity')
           res.status(400).json(err)
         })
     } else {
@@ -37,6 +38,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /verify_identity_callback')
           res.status(400).json(err)
         })
     } else {
@@ -53,6 +55,7 @@ export default {
           res.json(data)
         })
         .catch(err => {
+          console.log('[POST] /check_verification_status')
           res.status(400).json(err)
         })
     } else {

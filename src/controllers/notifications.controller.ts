@@ -10,6 +10,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /register_push', err)
           res.status(400).json(err)
         })
     } else {
@@ -25,6 +26,7 @@ export default {
           res.status(204).end()
         })
         .catch(err => {
+          console.log('[POST] /unregister_push', err)
           res.status(400).json(err)
         })
     } else {

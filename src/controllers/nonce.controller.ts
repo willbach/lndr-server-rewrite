@@ -7,6 +7,7 @@ export default {
         res.json(nonce)
       })
       .catch(err => {
+        console.log('[GET] /nonce', err)
         res.status(400).json(err)
       })
   }

@@ -94,7 +94,7 @@ describe('LNDR Server', function() {
 
     it('GET /nick should respond with the correct nickname for the given address', function(done) {
       request(server).get('/nick/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body.nickname, testNick1)
+        assert.equal(res.body, testNick1)
         done()
       })
     })
@@ -135,7 +135,7 @@ describe('LNDR Server', function() {
 
     it('GET /nick should confirm that nick was changed', function(done) {
       request(server).get('/nick/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body.nickname, testNick2)
+        assert.equal(res.body, testNick2)
         done()
       })
     })
@@ -291,7 +291,7 @@ describe('LNDR Server', function() {
 
     it('should check that email for user3 properly set', function(done) {
       request(server).get('/email/' + testAddress3).expect(200).then((res) => {
-        assert.equal(res.body.email, testEmail)
+        assert.equal(res.body, testEmail)
         done()
       })
     })

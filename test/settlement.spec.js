@@ -9,6 +9,23 @@ const Tx = require('ethereumjs-tx')
 
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
 
+const ERC20_ABI = [
+  // ERC20 functions
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"type":"function"},
+  {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
+  {"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},
+  {"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
+  {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"type":"function"},
+  // ERC20 events
+  {"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}
+  // {"inputs":[],"payable":false,"type":"constructor"},
+]
+
+const ERC20Contract = web3.eth.contract(ERC20_ABI)
+const testDaiAddress = '2839b617726d08d1fe59e279571d35c738d72948'
+
 const testUrl = "http://localhost:7402"
 const testPrivkey0  = "7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37"
 const testPrivkey1  = "bb63b692f9d8f21f0b978b596dc2b8611899f053d68aec6c1c20d1df4f5b6ee2"
@@ -68,23 +85,6 @@ const ucacAddrTRY = '0xfe2bbfbe30f835096ccbc9c12a38ac749d8402b2'
 const ucacAddr = '0x6804f48233f6ff2b468f7636560d525ca951931e'
 const ucacAddrVND = '0x815dcbb2008757a469d0daf8c310fae2fc41e96b'
 
-const ERC20_ABI = [
-  // ERC20 functions
-  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"type":"function"},
-  {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
-  {"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},
-  {"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
-  {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},
-  {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"type":"function"},
-  // ERC20 events
-  {"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},
-  {"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}
-  // {"inputs":[],"payable":false,"type":"constructor"},
-]
-
-const ERC20Contract = web3.eth.contract(ERC20_ABI)
-const testDaiAddress = '2839b617726d08d1fe59e279571d35c738d72948'
-
 describe('Settlement Tests', function() {
   describe('Basic Settlement Test', function() {
     const settlementCredit = { creditor: testAddress5, debtor: testAddress6, amount: 2939, memo: 'ETH test settlement', submitter: testAddress5, nonce: 0, hash: "", signature: "", ucac: ucacAddr, settlementCurrency: 'ETH', settlementAmount: undefined, settlementBlocknumber: undefined }
@@ -102,12 +102,7 @@ describe('Settlement Tests', function() {
     let settleAmount = 0
     // user5 submits pending settlement credit to user6
     it('POST /lend should be successful', function(done) {
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/lend',
-        body: settlementCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
       request(options).then(response => {
         console.log(response)
         done()
@@ -115,13 +110,10 @@ describe('Settlement Tests', function() {
     })
   
     it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
-      const options = {
-        uri: 'http://localhost:7402/pending_settlements/' + testAddress5,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
       request(options).then(res => {
-        assert.equal(res.unilateralSettlements.length, 1)
-        assert.equal(res.bilateralSettlements.length, 0)
+        assert.strictEqual(res.unilateralSettlements.length, 1)
+        assert.strictEqual(res.bilateralSettlements.length, 0)
         done()
       })
     })
@@ -130,26 +122,18 @@ describe('Settlement Tests', function() {
       settlementCredit.submitter = testAddress6
       settlementCredit.signature = testUtil.signCredit(settlementCredit, testPrivkey6)
   
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/lend',
-        body: settlementCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
       request(options).then(response => {
-        assert.equal(response, undefined)
+        assert.strictEqual(response, undefined)
         done()
       })
     })
   
     it('GET /pending_settlements should have 1 pending settlement for user 6', function(done) {
-      const options = {
-        uri: 'http://localhost:7402/pending_settlements/' + testAddress5,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
       request(options).then(res => {
-        assert.equal(res.unilateralSettlements.length, 0)
-        assert.equal(res.bilateralSettlements.length, 1)
+        assert.strictEqual(res.unilateralSettlements.length, 0)
+        assert.strictEqual(res.bilateralSettlements.length, 1)
         settleAmount = res.bilateralSettlements[0].creditRecord.settlementAmount
         console.log('SETTLEMENT AMOUNT', settleAmount)
         done()
@@ -199,66 +183,43 @@ describe('Settlement Tests', function() {
           const signature = testUtil.serverSign(newHash, testPrivkey5)
           const verifySettlementRequest = { creditHash: settlementCredit.hash, txHash, creditorAddress: testAddress5, signature }
       
-          const options = {
-            method: 'POST',
-            uri: 'http://localhost:7402/verify_settlement',
-            body: verifySettlementRequest,
-            json: true // Automatically stringifies the body to JSON
-          }
+          const options = { method: 'POST', uri: 'http://localhost:7402/verify_settlement', body: verifySettlementRequest, json: true }
       
           request(options).then(data => {
-            assert.equal(data, undefined)
+            assert.strictEqual(data, undefined)
           }).catch(err => console.log(err))
       
           // get pending here
           setTimeout(function() {
-            const options1 = {
-              uri: 'http://localhost:7402/pending_settlements/' + testAddress5,
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options1 = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
             request(options1).then(res => {
-              assert.equal(res.unilateralSettlements.length, 0)
-              assert.equal(res.bilateralSettlements.length, 0)
+              assert.strictEqual(res.unilateralSettlements.length, 0)
+              assert.strictEqual(res.bilateralSettlements.length, 0)
             })
       
-            const options2 = {
-              uri: 'http://localhost:7402/balance/' + testAddress5 + '?currency=USD',
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options2 = { uri: 'http://localhost:7402/balance/' + testAddress5 + '?currency=USD', json: true }
             request(options2).then(res => {
-              assert.equal(res, 2939)
+              assert.strictEqual(res, 2939)
             })
       
-            const options3 = {
-              uri: 'http://localhost:7402/balance/' + testAddress5 + '/' + testAddress6 + '?currency=USD',
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options3 = { uri: 'http://localhost:7402/balance/' + testAddress5 + '/' + testAddress6 + '?currency=USD', json: true }
             request(options3).then(res => {
-              assert.equal(res, 2939)
+              assert.strictEqual(res, 2939)
             })
       
-            const options4 = {
-              uri: 'http://localhost:7402/balance/' + testAddress6 + '?currency=USD',
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options4 = { uri: 'http://localhost:7402/balance/' + testAddress6 + '?currency=USD', json: true }
             request(options4).then(res => {
-              assert.equal(res, -2939)
+              assert.strictEqual(res, -2939)
             })
       
-            const options5 = {
-              uri: 'http://localhost:7402/balance/' + testAddress6 + '/' + testAddress5 + '?currency=USD',
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options5 = { uri: 'http://localhost:7402/balance/' + testAddress6 + '/' + testAddress5 + '?currency=USD', json: true }
             request(options5).then(res => {
-              assert.equal(res, -2939)
+              assert.strictEqual(res, -2939)
             })
       
-            const options6 = {
-              uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash,
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options6 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash, json: true }
             request(options6).then(res => {
-              assert.equal(res, txHash.slice(2))
+              assert.strictEqual(res, txHash.slice(2))
               done()
             })
           }, 3000)
@@ -283,12 +244,7 @@ describe('Settlement Tests', function() {
     let settleAmount = 0
     // user5 submits pending settlement credit to user6
     it('POST /borrow should be successful', function(done) {
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/borrow',
-        body: settlementCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { method: 'POST', uri: 'http://localhost:7402/borrow', body: settlementCredit, json: true }
       request(options).then(response => {
         console.log(response)
         done()
@@ -296,13 +252,10 @@ describe('Settlement Tests', function() {
     })
   
     it('GET /pending_settlements should have 1 pending settlement for user 4', function(done) {
-      const options = {
-        uri: 'http://localhost:7402/pending_settlements/' + testAddress3,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
       request(options).then(res => {
-        assert.equal(res.unilateralSettlements.length, 1)
-        assert.equal(res.bilateralSettlements.length, 0)
+        assert.strictEqual(res.unilateralSettlements.length, 1)
+        assert.strictEqual(res.bilateralSettlements.length, 0)
         done()
       })
     })
@@ -311,26 +264,18 @@ describe('Settlement Tests', function() {
       settlementCredit.submitter = testAddress3
       settlementCredit.signature = testUtil.signCredit(settlementCredit, testPrivkey3)
   
-      const options = {
-        method: 'POST',
-        uri: 'http://localhost:7402/lend',
-        body: settlementCredit,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
       request(options).then(response => {
-        assert.equal(response, undefined)
+        assert.strictEqual(response, undefined)
         done()
       })
     })
   
     it('GET /pending_settlements should have 1 pending settlement for user 3', function(done) {
-      const options = {
-        uri: 'http://localhost:7402/pending_settlements/' + testAddress3,
-        json: true // Automatically stringifies the body to JSON
-      }
+      const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
       request(options).then(res => {
-        assert.equal(res.unilateralSettlements.length, 0)
-        assert.equal(res.bilateralSettlements.length, 1)
+        assert.strictEqual(res.unilateralSettlements.length, 0)
+        assert.strictEqual(res.bilateralSettlements.length, 1)
         settleAmount = res.bilateralSettlements[0].creditRecord.settlementAmount
         console.log('SETTLEMENT AMOUNT', settleAmount)
         done()
@@ -345,10 +290,6 @@ describe('Settlement Tests', function() {
       })
 
       getNonce.then(function(nonce) {
-        // const daiAddress = 'c75b5bcd5f9a9c09e7aa1c3b1ea71e18f6c81f6e'
-        const testDaiAddress = '2839b617726d08d1fe59e279571d35c738d72948'
-        const ERC20Contract = web3.eth.contract(ERC20_ABI)
-        
         const resolveContract = new Promise((resolve, reject) => {
           ERC20Contract.at(`0x${testDaiAddress}`, (e, data) => e ? reject(e) : resolve(data))
         })
@@ -390,66 +331,43 @@ describe('Settlement Tests', function() {
             const signature = testUtil.serverSign(newHash, testPrivkey4)
             const verifySettlementRequest = { creditHash: settlementCredit.hash, txHash, creditorAddress: testAddress4, signature }
         
-            const options = {
-              method: 'POST',
-              uri: 'http://localhost:7402/verify_settlement',
-              body: verifySettlementRequest,
-              json: true // Automatically stringifies the body to JSON
-            }
+            const options = { method: 'POST', uri: 'http://localhost:7402/verify_settlement', body: verifySettlementRequest, json: true }
         
             request(options).then(data => {
-              assert.equal(data, undefined)
+              assert.strictEqual(data, undefined)
             }).catch(err => console.log(err))
         
             // get pending here
             setTimeout(function() {
-              const options1 = {
-                uri: 'http://localhost:7402/pending_settlements/' + testAddress3,
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options1 = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
               request(options1).then(res => {
-                assert.equal(res.unilateralSettlements.length, 0)
-                assert.equal(res.bilateralSettlements.length, 0)
+                assert.strictEqual(res.unilateralSettlements.length, 0)
+                assert.strictEqual(res.bilateralSettlements.length, 0)
               })
         
-              const options2 = {
-                uri: 'http://localhost:7402/balance/' + testAddress3 + '?currency=USD',
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options2 = { uri: 'http://localhost:7402/balance/' + testAddress3 + '?currency=USD', json: true }
               request(options2).then(res => {
-                assert.equal(res, -5000)
+                assert.strictEqual(res, -5000)
               })
         
-              const options3 = {
-                uri: 'http://localhost:7402/balance/' + testAddress3 + '/' + testAddress4 + '?currency=USD',
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options3 = { uri: 'http://localhost:7402/balance/' + testAddress3 + '/' + testAddress4 + '?currency=USD', json: true }
               request(options3).then(res => {
-                assert.equal(res, -5000)
+                assert.strictEqual(res, -5000)
               })
         
-              const options4 = {
-                uri: 'http://localhost:7402/balance/' + testAddress4 + '?currency=USD',
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options4 = { uri: 'http://localhost:7402/balance/' + testAddress4 + '?currency=USD', json: true }
               request(options4).then(res => {
-                assert.equal(res, 5000)
+                assert.strictEqual(res, 5000)
               })
         
-              const options5 = {
-                uri: 'http://localhost:7402/balance/' + testAddress4 + '/' + testAddress3 + '?currency=USD',
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options5 = { uri: 'http://localhost:7402/balance/' + testAddress4 + '/' + testAddress3 + '?currency=USD', json: true }
               request(options5).then(res => {
-                assert.equal(res, 5000)
+                assert.strictEqual(res, 5000)
               })
         
-              const options6 = {
-                uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash,
-                json: true // Automatically stringifies the body to JSON
-              }
+              const options6 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash, json: true }
               request(options6).then(res => {
-                assert.equal(res, txHash.slice(2))
+                assert.strictEqual(res, txHash.slice(2))
                 done()
               })
         
@@ -474,8 +392,8 @@ describe('Settlement Tests', function() {
 
     it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
       request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
-        assert.equal(res.body.pendingSettlements.length, 2)
-        assert.equal(res.body.bilateralPendingSettlements.length, 0)
+        assert.strictEqual(res.body.pendingSettlements.length, 2)
+        assert.strictEqual(res.body.bilateralPendingSettlements.length, 0)
         done()
       })
     })
@@ -490,8 +408,8 @@ describe('Settlement Tests', function() {
 
     it('GET /pending_settlements should have 2 bilateral pending settlements for user 9', function(done) {
       request(server).get('/pending_settlements/' + testAddress9).expect(200).then((res) => {
-        assert.equal(res.body.pendingSettlements.length, 0)
-        assert.equal(res.body.bilateralPendingSettlements.length, 2)
+        assert.strictEqual(res.body.pendingSettlements.length, 0)
+        assert.strictEqual(res.body.bilateralPendingSettlements.length, 2)
         settleAmount1 = res.body.bilateralPendingSettlements[0].settlementAmount
         settleAmount2 = res.body.bilateralPendingSettlements[1].settlementAmount
         done()
