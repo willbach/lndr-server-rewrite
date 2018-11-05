@@ -12,20 +12,9 @@ var creditProtocolAddress = '0x1aa76056924bf4768d63357eca6d6a56ec929131'
 
 var cpContract = web3.eth.contract(cpAbi).at(creditProtocolAddress)
 
-// cpContract.events.IssueCreditError({
-//     fromBlock: 0
-// }, function(error, event){ console.log(error, event) })
-// .on('data', function(event){
-//     console.log(event); // same results as the optional callback above
-// })
-// .on('error', console.error)
-
 var issueCreditErrorSubscription = cpContract.allEvents({}, function(err, logs) {
     console.log(err, logs)
 })
-
-
-
 
 
 
@@ -227,7 +216,6 @@ const sendTestDAI = async() => {
         web3.eth.getTransactionCount(`0x${testAddress4}`, (e, data) => e ? reject(e) : resolve(data))
     })
 
-    // const daiAddress = 'c75b5bcd5f9a9c09e7aa1c3b1ea71e18f6c81f6e'
     const testDaiAddress = '2839b617726d08d1fe59e279571d35c738d72948'
     const ERC20Contract = web3.eth.contract(ERC20_ABI)
     
@@ -240,14 +228,14 @@ const sendTestDAI = async() => {
     console.log(nonce, testAddress4, testAddress3, txData, daiContract)
     
     var rawTx = {
-    nonce,
-    gasPrice: 20000,
-    gasLimit: 300000,
-    from: `0x${testAddress4}`,
-    to: `0x${testDaiAddress}`,
-    value: 0,
-    data: txData,
-    chainId: 1
+        nonce,
+        gasPrice: 20000,
+        gasLimit: 300000,
+        from: `0x${testAddress4}`,
+        to: `0x${testDaiAddress}`,
+        value: 0,
+        data: txData,
+        chainId: 1
     }
     
     const tx = new Tx(rawTx)

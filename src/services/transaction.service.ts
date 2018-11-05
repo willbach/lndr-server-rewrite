@@ -94,12 +94,17 @@ export default {
       throw new Error('Hash does not match any pending record')
     }
 
-    const pending = new CreditRecord(rawPending)
+    const pending = new CreditRecord(rawPending, 'settlement')
+
+    console.log(pending)
 
     if (signerAddress !== pending.creditor && signerAddress !== pending.debtor) {
       throw new Error('bad rejection sig')
     }
 
+    if (pending.settlementAmount) {
+      await pendingRepository.deletePending(rejectRequest.hash, true)
+    }
     const rejection = await pendingRepository.deletePending(rejectRequest.hash, false)
 
     const recipientAddress = signerAddress === pending.creditor ? pending.debtor : pending.creditor
@@ -132,15 +137,15 @@ function calculateSettlementCreditRecord(config: ServerConfig, record: CreditRec
   const priceAdjustmentForCents = noAdjustment[currency] ? 1 : 100
 
   if (settlementCurrency === 'ETH') {
-    const currencyPerEth = config.ethereumPrices[currency.toUpperCase()] * priceAdjustmentForCents
+    const currencyPerEth = config.ethereumPrices[currency.toLowerCase()] * priceAdjustmentForCents
     const rawSettlementAmount = amount / currencyPerEth * Math.pow(10, 18)
 
     record.settlementAmount =  rawSettlementAmount - (rawSettlementAmount % Math.pow(10, 6))
     record.settlementBlocknumber = config.latestBlockNumber
   } else if (settlementCurrency === 'DAI') {
     // this code can be copied for any stable coin, assumed to be 1 DAI to 1 USD
-    const currencyPerDAI = config.ethereumPrices[currency.toUpperCase()] / config.ethereumPrices['USD']
-    const rawSettlementAmount = amount / currencyPerDAI * Math.pow(10, 18)
+    const currencyPerDAI = config.ethereumPrices[currency.toLowerCase()] / config.ethereumPrices['usd']
+    const rawSettlementAmount = amount / currencyPerDAI * Math.pow(10, 18) / priceAdjustmentForCents
 
     record.settlementAmount =  rawSettlementAmount - (rawSettlementAmount % Math.pow(10, 6))
     record.settlementBlocknumber = config.latestBlockNumber

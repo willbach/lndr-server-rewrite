@@ -12,7 +12,7 @@ export default {
     lookupFriends: (address: string) => {
         return db.any("SELECT inbound.origin, nicknames.nickname FROM friendships inbound INNER JOIN friendships outbound ON inbound.friend = outbound.origin AND inbound.origin = outbound.friend LEFT JOIN nicknames ON nicknames.address = inbound.origin WHERE inbound.friend = $1", [address]).then(data => {
             return data.map(entry => {
-                return { address: entry.origin, nickname: entry.nickname }
+                return { addr: entry.origin, nick: entry.nickname }
             })
         })
     },
@@ -20,7 +20,7 @@ export default {
     lookupInboundFriendRequests: (address: string) => {
         return db.any("SELECT inbound.origin, nicknames.nickname FROM friendships inbound LEFT JOIN friendships outbound ON inbound.friend = outbound.origin AND inbound.origin = outbound.friend LEFT JOIN nicknames ON nicknames.address = inbound.origin WHERE inbound.friend = $1 AND outbound.friend IS NULL", [address]).then(data => {
             return data.map(entry => {
-                return { address: entry.origin, nickname: entry.nickname }
+                return { addr: entry.origin, nick: entry.nickname }
             })
         })
     },
@@ -28,7 +28,7 @@ export default {
     lookupOutboundFriendRequests: (address: string) => {
         return db.any("SELECT outbound.friend, nicknames.nickname FROM friendships outbound LEFT JOIN friendships inbound ON outbound.friend = inbound.origin AND outbound.origin = inbound.friend LEFT JOIN nicknames ON nicknames.address = outbound.friend WHERE outbound.origin = $1 AND inbound.friend IS NULL", [address]).then(data => {
             return data.map(entry => {
-                return { address: entry.friend, nickname: entry.nickname }
+                return { addr: entry.friend, nick: entry.nickname }
             })
         })
     },

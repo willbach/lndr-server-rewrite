@@ -51,6 +51,8 @@ export default {
     
     lookupAddressesByFuzzyNick: (nick: string) => {
         const fuzzyNick = nick + "%"
-        return db.any("SELECT address, nickname FROM nicknames WHERE nickname LIKE $1 LIMIT 10", [fuzzyNick])
+        return db.any("SELECT address, nickname FROM nicknames WHERE nickname LIKE $1 LIMIT 10", [fuzzyNick]).then(results => results.map(result => {
+            return { addr: result.address, nick: result.nickname }
+        }))
     }
 }

@@ -30,8 +30,10 @@ export default {
 
     deletePending: (hash: string, settlement: boolean) => {
         if (settlement) {
+            console.log('delete the settlement')
             return db.any("DELETE FROM settlements WHERE hash = $1", [hash])
         } else {
+            console.log('delete the transaction')
             return db.any("DELETE FROM pending_credits WHERE hash = $1", [hash])
         }
     },

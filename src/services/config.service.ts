@@ -12,30 +12,30 @@ import ethInterfaceRepo from '../repositories/ethereum.interface.repository'
 import verifiedRepo from '../repositories/verified.repository'
 
 const ethereumPrices = {
-    AUD: '250',
-    CAD: '200',
-    CNY: '1600',
-    CHF: '250',
-    DKK: '1500',
-    EUR: '200',
-    GBP: '200',
-    HKD: '1600',
-    IDR: '2800000',
-    ILS: '800',
-    INR: '13500',
-    JPY: '20000',
-    KRW: '200000',
-    MYR: '800',
-    NOK: '2000',
-    NZD: '250',
-    PLN: '750',
-    RUB: '13000',
-    SEK: '2000',
-    SGD: '270',
-    THB: '6400',
-    TRY: '800',
-    USD: '200',
-    VND: '4500000',
+    aud: '250',
+    cad: '200',
+    cny: '1600',
+    chf: '250',
+    dkk: '1500',
+    eur: '200',
+    gbp: '200',
+    hkd: '1600',
+    idr: '2800000',
+    ils: '800',
+    inr: '13500',
+    jpy: '20000',
+    krw: '200000',
+    myr: '800',
+    nok: '2000',
+    nzd: '250',
+    pln: '750',
+    rub: '13000',
+    sek: '2000',
+    sgd: '270',
+    thb: '6400',
+    try: '800',
+    usd: '200',
+    vnd: '4500000',
 }
 
 export class ServerConfig {
@@ -69,7 +69,11 @@ export class ServerConfig {
     executionNonce: number
 
     constructor(data) {
-        this.lndrUcacAddrs = data['lndr-ucacs']
+        const ucacs = data['lndr-ucacs']
+        this.lndrUcacAddrs = Object.keys(ucacs).reduce((obj, key) => {
+            obj[key.toUpperCase()] = ucacs[key]
+            return obj
+        }, {})
         this.bindAddress = data['bind-address']
         this.bindPort = data['bind-port']
         this.creditProtocolAddress = data['credit-protocol-address']
@@ -106,7 +110,7 @@ export class ServerConfig {
     }
 
     getUcac(currency: string) {
-        return this.lndrUcacAddrs[currency.toLowerCase()]
+        return this.lndrUcacAddrs[currency.toUpperCase()]
     }
 
     getConfigResponse() {
@@ -121,28 +125,24 @@ export class ServerConfig {
 
     heartbeat() {
         setInterval(() => {
-            //     -- update server config
-            //     liftIO $ updateServerConfig configTVar
             this.updateServerConfig()
-            //     -- scan settlements table for any settlement eligible for deletion
-            //     deleteExpiredSettlements
+            
             this.deleteExpiredSettlements()
-            //     -- try to verify all settlements whose tx_hash column is populated
-            //     verifySettlementsWithTxHash
+            
             this.verifySettlementsWithTxHash()
-            //     -- log hearbeat statistics
-            //     liftIO $ pushLogStrLn loggerSet . toLogStr $ ("heartbeat" :: Text)
+
             console.log('heartbeat')
-            //     -- sleep for time specified in config (default 3000ms)
-            //     config <- liftIO $ readTVarIO configTVar
-            //     liftIO $ threadDelay (heartbeatInterval config * 10 ^ 6)
+            
         }, this.heartbeatInterval)
     }
 
     async updateServerConfig() {
         try {
             const prices = await heartbeatRepo.queryEtheruemPrices()
-            this.ethereumPrices = prices.data.rates
+            this.ethereumPrices = Object.keys(prices.data.rates).reduce((obj, key) => {
+                obj[key.toLowerCase()] = prices.data.rates[key]
+                return obj
+            }, {})
         } catch(e) {
             console.log('Error getting Ethereum prices:', e)
         }
@@ -174,13 +174,6 @@ export class ServerConfig {
         } catch(e) {
             console.log('Error confirming settlements: ', e)
         }
-        // verifySettlementsWithTxHash :: LndrHandler ()
-        // verifySettlementsWithTxHash = do
-        //     (ServerState pool configTVar _) <- ask
-        //     config <- liftIO $ readTVarIO configTVar
-        //     txHashes <- liftIO $ withResource pool Db.txHashesToVerify
-        //     creditsToVerify <- mapM (liftIO . withResource pool . Db.lookupCreditsByTxHash) txHashes
-        //     mapM_ verifyRecords creditsToVerify
     }
 
     async verifyRecords(credits: any /*[BilateralCreditRecord]*/) {
@@ -201,7 +194,7 @@ export class ServerConfig {
         creditRecords.forEach(record => {
             if (record.creditor === firstCreditor && record.settlementAmount) {
                 creditorAmount += record.settlementAmount
-            } else if (record.debtor === firstDebtor && record.settlementAmount) {
+            } else if (record.debtor === firstCreditor && record.settlementAmount) {
                 debtorAmount += record.settlementAmount
             }
         })
@@ -212,36 +205,21 @@ export class ServerConfig {
         await ethInterfaceRepo.verifySettlementPayment(firstRecord.txHash, settlementCreditor, settlementDebtor, Math.abs(creditorAmount - debtorAmount), firstRecord.creditRecord.settlementCurrency)
 
         await Promise.all(creditRecords.map(record => verifiedRepo.verifyCreditByHash(record.hash)))
+        
+        const results: any = []
 
-        const results = await Promise.all(credits.map(record => ethInterfaceRepo.finalizeTransaction(record)))
+        let index = 0
+        while (credits.length > 0) {
+            let record = credits.shift()
+            await ethInterfaceRepo.finalizeTransaction(record)
+                .then(hash => results.push(hash))
+                .catch(err => {
+                    console.log('[POST] /multi_settlement', err)
+                })
+            index++
+        }
 
         console.log('SETTLEMENTS WEB3: ', results)
-
-
-
-        // verifyRecords :: [BilateralCreditRecord] -> LndrHandler ()
-        // verifyRecords records = do
-        //     (ServerState pool configTVar loggerSet) <- ask
-            
-        //     let firstRecord = head records
-            
-        //     initialTxHash <- maybe (throwError (err500 {errBody = "Bilateral Settlement Record does not have txHash."})) 
-        //                      pure . txHash $ head records
-        //     -- this should only take the creditor, debtor, credit hash, and settlement amount
-        //     let firstCreditor = creditor $ creditRecord $ firstRecord
-        //         firstDebtor = debtor $ creditRecord $ firstRecord
-        //         deriveSettlementAmount = fromMaybe 0 . settlementAmount . creditRecord
-        //         isFirstCreditor = (== firstCreditor) . creditor . creditRecord
-        //         creditorAmount = sum . fmap deriveSettlementAmount $ filter isFirstCreditor $ records
-        //         debtorAmount = sum . fmap deriveSettlementAmount $ filter (not . isFirstCreditor) $ records
-        //         settlementCreditor = if creditorAmount > debtorAmount then firstCreditor else firstDebtor
-        //         settlementDebtor = if creditorAmount > debtorAmount then firstDebtor else firstCreditor
-            
-        //     verifySettlementPayment initialTxHash settlementCreditor settlementDebtor (abs $ creditorAmount - debtorAmount)
-        //     mapM_ (liftIO . withResource pool . Db.verifyCreditByHash . hash . creditRecord) records
-        //     web3Result <- mapM (finalizeTransaction configTVar) records
-        //                 -- `catchError` (pure . T.pack . show)
-        //     liftIO $ pushLogStrLn loggerSet . toLogStr . ("WEB3: " ++) . show $ web3Result
     }
 }
 

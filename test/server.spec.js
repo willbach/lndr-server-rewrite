@@ -185,7 +185,7 @@ describe('LNDR Server', function() {
     it('GET /friend_requests should return a pending from user 1', function(done) {
       request(server).get('/friend_requests/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress3)
+        assert.equal(res.body[0].addr, testAddress3)
         done()
       })
     })
@@ -207,7 +207,7 @@ describe('LNDR Server', function() {
     it('GET /outbound_friend_requests should return a pending outbound from user 1', function(done) {
       request(server).get('/outbound_friend_requests/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress4)
+        assert.equal(res.body[0].addr, testAddress4)
         done()
       })
     })
@@ -219,7 +219,7 @@ describe('LNDR Server', function() {
     it('GET /friends should return a list containing user 2 for user 1', function(done) {
       request(server).get('/friends/' + testAddress3).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress4)
+        assert.equal(res.body[0].addr, testAddress4)
         done()
       })
     })
@@ -227,7 +227,7 @@ describe('LNDR Server', function() {
     it('GET /friends should return a list containing user 1 for user 2', function(done) {
       request(server).get('/friends/' + testAddress4).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress3)
+        assert.equal(res.body[0].addr, testAddress3)
         done()
       })
     })
@@ -575,7 +575,7 @@ describe('LNDR Server', function() {
       it('GET /friends should return a list containing user 2 for user 1', function(done) {
         request(server).get('/friends/' + testAddress1).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
-          assert.equal(res.body[0].address, testAddress2)
+          assert.equal(res.body[0].addr, testAddress2)
           done()
         })
       })
@@ -583,7 +583,7 @@ describe('LNDR Server', function() {
       it('GET /friends should return a list containing user 1 for user 2', function(done) {
         request(server).get('/friends/' + testAddress2).expect(200).then((res) => {
           assert.equal(res.body.length, 1)
-          assert.equal(res.body[0].address, testAddress1)
+          assert.equal(res.body[0].addr, testAddress1)
           done()
         })
       })
@@ -856,7 +856,7 @@ describe('LNDR Server', function() {
     it('GET /friends should return a list containing user 2 for user 1', function(done) {
       request(server).get('/friends/' + testAddress7).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress8)
+        assert.equal(res.body[0].addr, testAddress8)
         done()
       })
     })
@@ -864,7 +864,7 @@ describe('LNDR Server', function() {
     it('GET /friends should return a list containing user 1 for user 2', function(done) {
       request(server).get('/friends/' + testAddress8).expect(200).then((res) => {
         assert.equal(res.body.length, 1)
-        assert.equal(res.body[0].address, testAddress7)
+        assert.equal(res.body[0].addr, testAddress7)
         done()
       })
     })

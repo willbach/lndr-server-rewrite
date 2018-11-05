@@ -55,7 +55,7 @@ export default {
       })
       .catch(err => {
         console.log('[POST] /reject', err)
-        if (err.contains('bad rejection sig')) {
+        if (err.toString().contains('bad rejection sig')) {
           res.status(401).json(err)
         } else {
           res.status(400).json(err)

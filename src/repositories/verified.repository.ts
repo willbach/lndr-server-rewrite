@@ -22,7 +22,7 @@ export default {
 
     getNonce: (address: string, counterparty: string) => {
         return db.any("SELECT COALESCE(MAX(nonce) + 1, 0) FROM verified_credits WHERE (creditor = $1 AND debtor = $2) OR (creditor = $2 AND debtor = $1)", [address, counterparty]).then(data => {
-            return data[0].coalesce
+            return Number(data[0].coalesce)
         })
     },
 
