@@ -25,7 +25,7 @@ createdb -U ${dbuser} ${dbname} && psql -U ${dbuser} ${dbname} -f ../src/db/crea
 
 cd ..
 
-node ./build/server.js &
+node ./lib/server.js &
 lndr_server_pid=$!
 echo "Started server, pid ${lndr_server_pid}"
 
@@ -37,7 +37,7 @@ mocha ./test/settlement.spec.js --exit
 
 
 # tests for settlements
-# lndr_server_pid=`node ./build/server.js &`
+# lndr_server_pid=`node ./lib/server.js &`
 
 # mocha ./test/settlement.spec.js --exit
 

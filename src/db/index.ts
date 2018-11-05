@@ -5,14 +5,14 @@ const config = fs.readFileSync(path.join(__dirname, '../../data/lndr-server.conf
 
 const dbConfig = JSON.parse(config).db
 
-const pgp = require('pg-promise')(/*options*/)
+const pgp = require('pg-promise')()
 
 const cn = {
-  host: dbConfig.host,
-  port: dbConfig.port,
   database: dbConfig.name,
-  user: dbConfig.user,
-  password: dbConfig['user-password']
+  host: dbConfig.host,
+  password: dbConfig['user-password'],
+  port: dbConfig.port,
+  user: dbConfig.user
 }
 
 const db = pgp(cn)

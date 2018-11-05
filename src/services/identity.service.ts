@@ -1,31 +1,17 @@
+import IdentityVerificationRequest from '../dto/identity-verification-request'
+import VerificationStatusEntry from '../dto/verification-status-entry'
+import VerificationStatusRequest from '../dto/verification-status-request'
+
 import identityRepository from '../repositories/identity.repository'
 
-import IdentityVerificationRequest from '../dto/identity-verification-request'
-import VerificationStatusRequest from '../dto/verification-status-request'
-import VerificationStatusEntry from '../dto/verification-status-entry'
-
 export default {
-  registerUser: async(verificationRequest: IdentityVerificationRequest) => {
-    const documents = verificationRequest.idDocs
-
-    if (!documents) {
-      throw new Error('No documents attached')
-    }
-
-    const verificationResult = await identityRepository.sendVerificationRequest(verificationRequest)
-
-    return Promise.all(documents.map(document => identityRepository.sendVerificationDocument(verificationResult.id, document)))
-  },
-
-  handleCallback: (status: any) => {
-    return identityRepository.addVerificationStatus(status.externalUserId, status.applicantId, status.review.reviewAnswer)
-  },
-
-  checkStatus: async(statusRequest: VerificationStatusRequest) => {
+  // eslint-disable-next-line complexity, max-statements
+  checkStatus: async (statusRequest: VerificationStatusRequest) => {
     const storedStatus = await identityRepository.lookupVerificationStatus(statusRequest.user)
+
     if (storedStatus && storedStatus.length > 0 && storedStatus[0].status) {
       return new VerificationStatusEntry(storedStatus[0])
-    } else if(storedStatus && storedStatus.length > 0 && storedStatus[0].applicant_id) {
+    } else if (storedStatus && storedStatus.length > 0 && storedStatus[0].applicant_id) {
       const checkedStatus = await identityRepository.getVerificationStatus(storedStatus.applicant_id)
 
       if (checkedStatus && checkedStatus.review && checkedStatus.review.reviewAnswer) {
@@ -33,15 +19,28 @@ export default {
 
         return new VerificationStatusEntry({
           address: checkedStatus.externalUserId,
-          applicant_id: checkedStatus.applicantId,
+          applicantId: checkedStatus.applicantId,
           status: checkedStatus.review.reviewAnswer
         })
-      } else {
-        throw new Error('Unable to get applicant status')
       }
+      throw new Error('Unable to get applicant status')
     } else {
       throw new Error('Unable to get applicant status')
     }
+  },
+
+  handleCallback: (status: any) => identityRepository.addVerificationStatus(status.externalUserId, status.applicantId, status.review.reviewAnswer),
+
+  registerUser: async (verificationRequest: IdentityVerificationRequest) => {
+    const { idDocs } = verificationRequest
+
+    if (!idDocs) {
+      throw new Error('No idDocs attached')
+    }
+
+    const verificationResult = await identityRepository.sendVerificationRequest(verificationRequest)
+
+    return Promise.all(idDocs.map((document) => identityRepository.sendVerificationDocument(verificationResult.id, document)))
   }
 }
 

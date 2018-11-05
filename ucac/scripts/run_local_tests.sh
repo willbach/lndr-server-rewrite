@@ -29,7 +29,7 @@ cd .. && mocha ./test/server.spec.js --exit
 
 
 # tests for settlements
-# lndr_server_pid=`node ./build/server.js &`
+# lndr_server_pid=`node ./lib/server.js &`
 
 # mocha ./test/settlement.spec.js --exit
 

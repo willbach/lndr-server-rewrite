@@ -1,6 +1,6 @@
+import { bufferToHex, hexToBuffer, utf8ToBuffer } from '../utils/buffer.util'
 import { signatureToAddress } from '../utils/credit.protocol.util'
 const ethUtil = require('ethereumjs-util')
-import { bufferToHex, hexToBuffer, utf8ToBuffer } from '../utils/buffer.util'
 
 export default class PushRequest {
   channelID: string

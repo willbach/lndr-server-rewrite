@@ -1,4 +1,4 @@
-export default class IdentityDocument { 
+export default class IdentityDocument {
   idDocType: string
   country: string
   file?: string

@@ -1,5 +1,5 @@
+import { bufferToHex, hexToBuffer, utf8ToBuffer } from '../utils/buffer.util'
 import { signatureToAddress } from '../utils/credit.protocol.util'
-import { hexToBuffer, utf8ToBuffer, bufferToHex } from '../utils/buffer.util'
 const ethUtil = require('ethereumjs-util')
 
 export default class EmailRequest {

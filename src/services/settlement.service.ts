@@ -1,28 +1,23 @@
+import BilateralCreditRecord from '../dto/bilateral-credit-record'
+import CreditRecord from '../dto/credit-record'
+import VerifySettlementRequest from '../dto/verify-settlement-request'
+
 import pendingRepository from '../repositories/pending.repository'
+import { stripHexPrefix } from '../utils/buffer.util'
 import verifiedRepository from '../repositories/verified.repository'
 
-import VerifySettlementRequest from '../dto/verify-settlement-request'
-import CreditRecord from '../dto/credit-record'
-import BilateralCreditRecord from '../dto/bilateral-credit-record'
-
-import { stripHexPrefix } from '../utils/buffer.util'
-
 export default {
-  getPendingSettlements: async(address: string) => {
-    const rawUnilateralSettlements = await pendingRepository.lookupPendingByAddress(address, true)
+  getPendingSettlements: async (address: string) => {
     const rawBilateralSettlements = await verifiedRepository.lookupSettlementCreditByAddress(address)
+    const rawUnilateralSettlements = await pendingRepository.lookupPendingByAddress(address, true)
 
-    const unilateralSettlements = rawUnilateralSettlements.map(settlement => new CreditRecord(settlement, 'settlement'))
-    const bilateralSettlements = rawBilateralSettlements.map(settlement => new BilateralCreditRecord(settlement))
+    const bilateralSettlements = rawBilateralSettlements.map((settlement) => new BilateralCreditRecord(settlement))
+    const unilateralSettlements = rawUnilateralSettlements.map((settlement) => new CreditRecord(settlement, 'settlement'))
 
-    return { unilateralSettlements, bilateralSettlements }
+    return { bilateralSettlements, unilateralSettlements }
   },
 
-  verifySettlement: (verification: VerifySettlementRequest) => {
-    return verifiedRepository.updateSettlementTxHash(stripHexPrefix(verification.txHash), verification.creditHash)
-  },
+  getTxHash: (creditHash: string) => verifiedRepository.txHashByCreditHash(creditHash),
 
-  getTxHash: (creditHash: string) => {
-    return verifiedRepository.txHashByCreditHash(creditHash)
-  }
+  verifySettlement: (verification: VerifySettlementRequest) => verifiedRepository.updateSettlementTxHash(stripHexPrefix(verification.txHash), verification.creditHash)
 }

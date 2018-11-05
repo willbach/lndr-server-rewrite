@@ -4,201 +4,201 @@ const Web3 = require('web3')
 const web3 = new Web3()
 
 import CreditRecord from '../dto/credit-record'
+import { hexToBuffer } from './buffer.util'
 
-import { hexToBuffer, stringToBuffer, bufferToHex, int32ToBuffer } from './buffer.util'
+export const decomposeSignature = (signature: string) => {
+  // Strip leading '0x', r is first 64 bytes, s is next 64 bytes, v is last 2 bytes
+  const signatureBuffer = hexToBuffer(signature)
+  const r = signatureBuffer.slice(0, 32)
+  const s = signatureBuffer.slice(32, 64)
+  const v = signatureBuffer.readUIntBE(64, 1)
+  return { r, s, v }
+}
+
+export const signatureToAddress = (hexHash: string, signature: string, hashPersonalMessage = true) => {
+  const { v, r, s } = decomposeSignature(signature)
+  const hash = hashPersonalMessage ? ethUtil.hashPersonalMessage(Buffer.from(hexHash, 'hex')) : hexToBuffer(hexHash)
+  const addressBuffer = ethUtil.pubToAddress(ethUtil.ecrecover(hash, v, r, s))
+  return addressBuffer.toString('hex')
+}
 
 export const determineSigner = (transaction: CreditRecord, signature: string) => {
-    const sigAddress = signatureToAddress(transaction.hash, signature)
-    if(transaction.creditor === sigAddress) {
-        return 'creditor'
-    } else if(transaction.debtor === sigAddress) {
-        return 'debtor'
-    } else {
-        return null
-    }
+  const sigAddress = signatureToAddress(transaction.hash, signature)
+  if (transaction.creditor === sigAddress) {
+    return 'creditor'
+  } else if (transaction.debtor === sigAddress) {
+    return 'debtor'
+  }
+  return null
 }
 
 export const verifySignature = (transaction: CreditRecord, signature: string) => {
-    const sigAddress = signatureToAddress(transaction.hash, signature)
-    return transaction.creditor === sigAddress || transaction.debtor === sigAddress
-}
-
-export const signatureToAddress = (hexHash: string, signature: string, hashPersonalMessage=true) => {
-    const { v, r, s } = decomposeSignature(signature)
-    let hash = hashPersonalMessage ? ethUtil.hashPersonalMessage(Buffer.from(hexHash, 'hex')) : hexToBuffer(hexHash)
-    const addressBuffer = ethUtil.pubToAddress( ethUtil.ecrecover(hash, v, r, s) )
-    return addressBuffer.toString('hex')
-}
-
-export const decomposeSignature = (signature: string) => {
-    //strip leading '0x', r is first 64 bytes, s is next 64 bytes, v is last 2 bytes
-    const signatureBuffer = hexToBuffer(signature)
-    const r = signatureBuffer.slice(0, 32)
-    const s = signatureBuffer.slice(32, 64)
-    const v = signatureBuffer.readUIntBE(64, 1)
-    return { v, r, s }
+  const sigAddress = signatureToAddress(transaction.hash, signature)
+  return transaction.creditor === sigAddress || transaction.debtor === sigAddress
 }
 
 export const bignumToHexString = (num) => {
-    var a = num.toString(16);
-    return "0x" + '0'.repeat(64 - a.length) + a;
+  const a = num.toString(16)
+  return `0x${'0'.repeat(64 - a.length)}${a}`
 }
 
 export const decomposeSignatureToBytes32 = (hexSignature: string) => {
-    var res = {} as any
-    res.r = "0x" + hexSignature.substr(0, 64)
-    res.s = "0x" + hexSignature.substr(64, 64)
-    res.v = web3.toDecimal("0x" + hexSignature.substr(128, 2))
-    if (res.v < 27) res.v += 27;
-    res.v = bignumToHexString(web3.toBigNumber(res.v))
+  const res = {} as any
+  res.r = `0x${hexSignature.substr(0, 64)}`
+  res.s = `0x${hexSignature.substr(64, 64)}`
+  res.v = web3.toDecimal(`0x${hexSignature.substr(128, 2)}`)
+  if (res.v < 27) {
+    res.v += 27
+  }
+  res.v = bignumToHexString(web3.toBigNumber(res.v))
 
-    return res
+  return res
 }
 
 export const privateToAddress = (privateKeyHex) => {
-    const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
-    return ethUtil.privateToAddress(privateKeyBuffer).toString('hex')
+  const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
+  return ethUtil.privateToAddress(privateKeyBuffer).toString('hex')
 }
 
-//   textToHostPreference :: Text -> W.HostPreference
-// textToHostPreference = fromString . T.unpack
+//   TextToHostPreference :: Text -> W.HostPreference
+// TextToHostPreference = fromString . T.unpack
 
 
-// hashCreditLog :: IssueCreditLog -> Text
-// hashCreditLog (IssueCreditLog ucac creditor debtor amount nonce _) =
-//                 let message = T.concat $
-//                       stripHexPrefix <$> [ Addr.toText ucac
+// HashCreditLog :: IssueCreditLog -> Text
+// HashCreditLog (IssueCreditLog ucac creditor debtor amount nonce _) =
+//                 Let message = T.concat $
+//                       StripHexPrefix <$> [ Addr.toText ucac
 //                                          , Addr.toText creditor
 //                                          , Addr.toText debtor
 //                                          , integerToHex amount
 //                                          , integerToHex nonce
 //                                          ]
-//                 in EU.hashText message
+//                 In EU.hashText message
 
 
-// decomposeSig :: Text -> (BytesN 32, BytesN 32, BytesN 32)
-// decomposeSig sig = (sigR, sigS, sigV)
-//     where strippedSig = stripHexPrefix sig
-//           sigR = BytesN . bytesDecode $ T.take 64 strippedSig
-//           sigS = BytesN . bytesDecode . T.take 64 . T.drop 64 $ strippedSig
-//           sigV = BytesN . bytesDecode . alignR . T.take 2 . T.drop 128 $ strippedSig
+// DecomposeSig :: Text -> (BytesN 32, BytesN 32, BytesN 32)
+// DecomposeSig sig = (sigR, sigS, sigV)
+//     Where strippedSig = stripHexPrefix sig
+//           SigR = BytesN . bytesDecode $ T.take 64 strippedSig
+//           SigS = BytesN . bytesDecode . T.take 64 . T.drop 64 $ strippedSig
+//           SigV = BytesN . bytesDecode . alignR . T.take 2 . T.drop 128 $ strippedSig
 
 
-// bytesDecode :: Text -> BA.Bytes
-// bytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
+// BytesDecode :: Text -> BA.Bytes
+// BytesDecode = BA.convert . fst . BS16.decode . T.encodeUtf8
 
 
-// bytesEncode :: Text -> Text
-// bytesEncode = T.decodeUtf8 . BS16.encode . T.encodeUtf8
+// BytesEncode :: Text -> Text
+// BytesEncode = T.decodeUtf8 . BS16.encode . T.encodeUtf8
 
 
-// textToBytesN32 :: Text -> BytesN 32
-// textToBytesN32 = BytesN . bytesDecode . T.take 64 . T.drop 2
+// TextToBytesN32 :: Text -> BytesN 32
+// TextToBytesN32 = BytesN . bytesDecode . T.take 64 . T.drop 2
 
 
-// addrToBS :: Address -> B.ByteString
-// addrToBS = T.encodeUtf8 . Addr.toText
+// AddrToBS :: Address -> B.ByteString
+// AddrToBS = T.encodeUtf8 . Addr.toText
 
 
-// takeNthByte32 :: Int -> Text -> Text
-// takeNthByte32 n = T.take byte32CharLength . T.drop (n * byte32CharLength) . stripHexPrefix
-//     where byte32CharLength = 64
+// TakeNthByte32 :: Int -> Text -> Text
+// TakeNthByte32 n = T.take byte32CharLength . T.drop (n * byte32CharLength) . stripHexPrefix
+//     Where byte32CharLength = 64
 
 
 // -- transforms the standard ('0x' + 64-char) bytes32 rendering of a log field into the
 // -- 40-char hex representation of an address
-// bytes32ToAddress :: Text -> Either SomeException Address
-// bytes32ToAddress = mapLeft (toException . TypeError) . Addr.fromText . T.drop 26
+// Bytes32ToAddress :: Text -> Either SomeException Address
+// Bytes32ToAddress = mapLeft (toException . TypeError) . Addr.fromText . T.drop 26
 
 
-// addressToBytes32 :: Address -> Text
-// addressToBytes32 = T.append "0x" . alignR . Addr.toText
+// AddressToBytes32 :: Address -> Text
+// AddressToBytes32 = T.append "0x" . alignR . Addr.toText
 
 
-// textToAddress :: Text -> Address
-// textToAddress = fromRight (error "bad address") . Addr.fromText
+// TextToAddress :: Text -> Address
+// TextToAddress = fromRight (error "bad address") . Addr.fromText
 
 
-// hexToInteger :: Text -> Integer
-// hexToInteger = fst . head . readHex . T.unpack . stripHexPrefix
+// HexToInteger :: Text -> Integer
+// HexToInteger = fst . head . readHex . T.unpack . stripHexPrefix
 
 
-// stripHexPrefix :: Text -> Text
-// stripHexPrefix x | T.isPrefixOf "0x" x = T.drop 2 x
+// StripHexPrefix :: Text -> Text
+// StripHexPrefix x | T.isPrefixOf "0x" x = T.drop 2 x
 //                  | otherwise           = x
 
 
-// addHexPrefix :: Text -> Text
-// addHexPrefix x | T.isPrefixOf "0x" x = x
+// AddHexPrefix :: Text -> Text
+// AddHexPrefix x | T.isPrefixOf "0x" x = x
 //                | otherwise           = T.append "0x" x
 
 
-// integerToHex :: Integer -> Text
-// integerToHex x = T.append "0x" strRep
-//     where strRep = alignR . T.pack $ showHex x ""
+// IntegerToHex :: Integer -> Text
+// IntegerToHex x = T.append "0x" strRep
+//     Where strRep = alignR . T.pack $ showHex x ""
 
 
-// integerToHex' :: Integer -> Text
-// integerToHex' x = T.append "0x" . T.pack $ showHex x ""
+// IntegerToHex' :: Integer -> Text
+// IntegerToHex' x = T.append "0x" . T.pack $ showHex x ""
 
 
-// roundToMegaWei :: Integer -> Integer
-// roundToMegaWei int = int - (int `mod` 10 ^ 6)
+// RoundToMegaWei :: Integer -> Integer
+// RoundToMegaWei int = int - (int `mod` 10 ^ 6)
 
-// align :: Text -> (Text, Text)
-// align v = (v <> zeros, zeros <> v)
-//   where zerosLen = 64 - (T.length v `mod` 64)
-//         zeros = T.replicate zerosLen "0"
-
-
-// alignL :: Text -> Text
-// alignL = fst . align
+// Align :: Text -> (Text, Text)
+// Align v = (v <> zeros, zeros <> v)
+//   Where zerosLen = 64 - (T.length v `mod` 64)
+//         Zeros = T.replicate zerosLen "0"
 
 
-// alignR :: Text -> Text
-// alignR = snd . align
+// AlignL :: Text -> Text
+// AlignL = fst . align
 
 
-// getUcac :: B.Bimap Text Address -> Maybe Text -> Address
-// getUcac ucacAddresses currency =
-//     let defaultUcac = fromMaybe (error "no USD ucac registered") $ B.lookup "USD" ucacAddresses
-//     in fromMaybe defaultUcac $ (`B.lookup` ucacAddresses) =<< currency
+// AlignR :: Text -> Text
+// AlignR = snd . align
 
 
-// configToResponse :: ServerConfig -> ConfigResponse
-// configToResponse config = ConfigResponse (B.toMap $ lndrUcacAddrs config)
+// GetUcac :: B.Bimap Text Address -> Maybe Text -> Address
+// GetUcac ucacAddresses currency =
+//     Let defaultUcac = fromMaybe (error "no USD ucac registered") $ B.lookup "USD" ucacAddresses
+//     In fromMaybe defaultUcac $ (`B.lookup` ucacAddresses) =<< currency
+
+
+// ConfigToResponse :: ServerConfig -> ConfigResponse
+// ConfigToResponse config = ConfigResponse (B.toMap $ lndrUcacAddrs config)
 //                                          (creditProtocolAddress config)
 //                                          (gasPrice config) (ethereumPrices config)
 //                                          (latestBlockNumber config - 40600)
 
 
 // -- example input data: 0x0a5b410e000000000000000000000000869a8f2c3d22be392618ed06c8f548d1d5b5aed600000000000000000000000070d71994d0414c19c1f09f1f2946544e8d97c4290000000000000000000000001b5fec5060e51886184d30b3d211d50836087b83000000000000000000000000000000000000000000000000000000000000006481e2e0f119561515281f1c76d64431760a8612305931f5378f3004da3aa6209927b3f24c58888a06da343aa4bf1f3520122e703e6ccf146ee9ac60e2123b10d8000000000000000000000000000000000000000000000000000000000000001bb6ff2d00768200c769018c277d53b2e2a3a3d5f4d740a2acc3e35cb4421dd38a45a02960d1e92cf061a357a819072658a482c02c4a4ee06e01cb58cf66bc3a8f000000000000000000000000000000000000000000000000000000000000001c736f6d657468696e672020202020202020202020202020202020202020202020
-// parseIssueCreditInput :: Nonce -> Text -> (IssueCreditLog, Text, Bool, Text, Bool)
-// parseIssueCreditInput (Nonce nonce) inputData = ( creditLog
+// ParseIssueCreditInput :: Nonce -> Text -> (IssueCreditLog, Text, Bool, Text, Bool)
+// ParseIssueCreditInput (Nonce nonce) inputData = ( creditLog
 //                                                 , creditorSig
 //                                                 , creditorSigValid
 //                                                 , debtorSig
 //                                                 , debtorSigValid
 //                                                 )
-//     where (funcIdText, rest) = T.splitAt 8 $ stripHexPrefix inputData
+//     Where (funcIdText, rest) = T.splitAt 8 $ stripHexPrefix inputData
 //           (ucacIdText, rest1) = T.splitAt 64 rest
 //           (creditorText', rest2) = T.splitAt 64 rest1
-//           creditorText = T.drop 24 creditorText'
+//           CreditorText = T.drop 24 creditorText'
 //           (debtorText', rest3) = T.splitAt 64 rest2
-//           debtorText = T.drop 24 debtorText'
+//           DebtorText = T.drop 24 debtorText'
 //           (amountText, rest4) = T.splitAt 64 rest3
 //           (creditorSig', rest5) = T.splitAt 192 rest4
-//           parseSig (x, y) = T.append x $ T.drop 62 y
-//           creditorSig = parseSig $ T.splitAt 128 creditorSig'
+//           ParseSig (x, y) = T.append x $ T.drop 62 y
+//           CreditorSig = parseSig $ T.splitAt 128 creditorSig'
 //           (debtorSig', rest6) = T.splitAt 192 rest5
-//           debtorSig = parseSig $ T.splitAt 128 debtorSig'
-//           memo = T.decodeUtf8 . fst . BS16.decode $ T.encodeUtf8 $ T.take 64 rest6
-//           creditLog = IssueCreditLog (textToAddress $ T.drop 24 ucacIdText)
+//           DebtorSig = parseSig $ T.splitAt 128 debtorSig'
+//           Memo = T.decodeUtf8 . fst . BS16.decode $ T.encodeUtf8 $ T.take 64 rest6
+//           CreditLog = IssueCreditLog (textToAddress $ T.drop 24 ucacIdText)
 //                                      (textToAddress creditorText)
 //                                      (textToAddress debtorText)
 //                                      (hexToInteger amountText)
-//                                      nonce
-//                                      memo
-//           messageHash = EU.hashPersonalMessage $ hashCreditLog creditLog
-//           creditorSigValid = Right creditorText == EU.ecrecover creditorSig messageHash
-//           debtorSigValid = Right debtorText == EU.ecrecover debtorSig messageHash
+//                                      Nonce
+//                                      Memo
+//           MessageHash = EU.hashPersonalMessage $ hashCreditLog creditLog
+//           CreditorSigValid = Right creditorText == EU.ecrecover creditorSig messageHash
+//           DebtorSigValid = Right debtorText == EU.ecrecover debtorSig messageHash

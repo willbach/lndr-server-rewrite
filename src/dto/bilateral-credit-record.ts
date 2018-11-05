@@ -11,18 +11,18 @@ export default class BilateralCreditRecord {
       this.creditRecord = data.creditRecord
     } else {
       this.creditRecord = new CreditRecord({
+        amount: data.amount,
         creditor: data.creditor,
         debtor: data.debtor,
-        amount: data.amount,
-        memo: data.memo,
-        submitter: data.submitter,
-        nonce: data.nonce,
         hash: data.hash,
-        signature: data.creditor_signature,
-        ucac: data.ucac,
-        settlementCurrency: data.currency,
+        memo: data.memo,
+        nonce: data.nonce,
         settlementAmount: data.settlement_amount ? data.settlement_amount : data.settlementAmount,
         settlementBlocknumber: data.blocknumber,
+        settlementCurrency: data.currency,
+        signature: data.creditor_signature,
+        submitter: data.submitter,
+        ucac: data.ucac
       })
     }
 

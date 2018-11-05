@@ -1,5 +1,5 @@
+import { bufferToHex, hexToBuffer, int32ToBuffer } from '../utils/buffer.util'
 import { signatureToAddress } from '../utils/credit.protocol.util'
-import { hexToBuffer, int32ToBuffer, bufferToHex } from '../utils/buffer.util'
 const ethUtil = require('ethereumjs-util')
 
 export default class CreditRecord {
@@ -16,6 +16,7 @@ export default class CreditRecord {
   settlementAmount?: number
   settlementBlocknumber?: number
 
+  // eslint-disable-next-line max-statements
   constructor(data: any, type?: string) {
     this.creditor = this.strip0x(data.creditor)
     this.debtor = this.strip0x(data.debtor)
@@ -31,7 +32,8 @@ export default class CreditRecord {
     this.settlementCurrency = type === 'settlement' ? data.currency : data.settlementCurrency
   }
 
-  strip0x(address) {
+  // eslint-disable-next-line class-methods-use-this
+  strip0x(address: string) {
     if (address.substr(0, 2) === '0x') {
       return address.slice(2)
     }

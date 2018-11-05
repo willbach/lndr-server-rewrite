@@ -1,15 +1,28 @@
-import settlementService from '../services/settlement.service'
+import { badRequest, notFound, successNoContent, unauthorized } from '../utils/http.codes'
+
 import VerifySettlementRequest from '../dto/verify-settlement-request'
+import settlementService from '../services/settlement.service'
 
 export default {
   getPendingSettlements: (req, res) => {
     settlementService.getPendingSettlements(req.params.address)
-      .then(data => {
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /pending_settlements', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /pending_settlements', err)
+        res.status(notFound).json(err)
+      })
+  },
+
+  getTxHash: (req, res) => {
+    settlementService.getTxHash(req.params.creditHash)
+      .then((data) => {
+        res.json(data)
+      })
+      .catch((err) => {
+        console.error('[GET] /tx_hash', err)
+        res.status(notFound).json(err)
       })
   },
 
@@ -19,25 +32,14 @@ export default {
     if (verification.signatureMatches()) {
       settlementService.verifySettlement(verification)
         .then(() => {
-          res.status(204).end()
+          res.status(successNoContent).end()
         })
-        .catch(err => {
-          console.log('[POST] /verify_settlement', err)
-          res.status(400).json(err)
+        .catch((err) => {
+          console.error('[POST] /verify_settlement', err)
+          res.status(badRequest).json(err)
         })
     } else {
-      res.status(401).json('Signature does not match')
+      res.status(unauthorized).json('Signature does not match')
     }
-  },
-
-  getTxHash: (req, res) => {
-    settlementService.getTxHash(req.params.creditHash)
-      .then(data => {
-        res.json(data)
-      })
-      .catch(err => {
-        console.log('[GET] /tx_hash', err)
-        res.status(400).json(err)
-      })
   }
 }

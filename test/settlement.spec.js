@@ -1,5 +1,5 @@
 const assert = require('assert')
-const bufferUtil = require('../build/utils/buffer.util')
+const bufferUtil = require('../lib/utils/buffer.util')
 const testUtil = require('./util/test.util')
 const ethUtil = require('ethereumjs-util')
 const request = require('request-promise')

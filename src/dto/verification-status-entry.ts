@@ -5,7 +5,7 @@ export default class VerificationStatusEntry {
 
   constructor(data) {
     this.user = data.address
-    this.sumsubId = data.applicant_id
+    this.sumsubId = data.applicant_id ? data.applicant_id : data.applicantId
     this.status = data.status
   }
 }

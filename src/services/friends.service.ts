@@ -1,23 +1,13 @@
 import friendsRepository from '../repositories/friends.repository'
 
 export default {
-  getFriendList: (address: string) => {
-    return friendsRepository.lookupFriends(address)
-  },
+  addFriends: (address: string, friendList: [string]) => Promise.all(friendList.map((friend) => friendsRepository.addFriends(address, friend))),
 
-  getFriendRequests: (address: string) => {
-    return friendsRepository.lookupInboundFriendRequests(address)
-  },
+  getFriendList: (address: string) => friendsRepository.lookupFriends(address),
 
-  getOutboudFriendRequests: (address: string) => {
-    return friendsRepository.lookupOutboundFriendRequests(address)
-  },
+  getFriendRequests: (address: string) => friendsRepository.lookupInboundFriendRequests(address),
 
-  addFriends: (address: string, friendList: [string]) => {
-    return Promise.all(friendList.map(friend => friendsRepository.addFriends(address, friend)))
-  },
+  getOutboudFriendRequests: (address: string) => friendsRepository.lookupOutboundFriendRequests(address),
 
-  removeFriends: (address: string, friendList: [string]) => {
-    return friendsRepository.removeFriends(address, friendList)
-  }
+  removeFriends: (address: string, friendList: [string]) => friendsRepository.removeFriends(address, friendList)
 }

@@ -1,37 +1,38 @@
 import balanceService from '../services/balance.service'
+import { notFound } from '../utils/http.codes'
 
 export default {
-  getCounterParties: (req: any, res: any) => {
-    balanceService.getCounterParties(req.params.address)
-      .then(data => {
+  getBalance: (req: any, res: any) => {
+    balanceService.getBalance(req.params.address, req.query.currency)
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /counterparties', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /balance', err)
+        res.status(notFound).json(err)
+      })
+  },
+
+  getCounterParties: (req: any, res: any) => {
+    balanceService.getCounterParties(req.params.address)
+      .then((data) => {
+        res.json(data)
+      })
+      .catch((err) => {
+        console.error('[GET] /counterparties', err)
+        res.status(notFound).json(err)
       })
   },
 
   getTwoPartyBalance: (req: any, res: any) => {
     const { address1, address2 } = req.params
     balanceService.getTwoPartyBalance(address1, address2, req.query.currency)
-      .then(data => {
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /balance', err)
-        res.status(400).json(err)
-      })
-  },
-
-  getBalance: (req: any, res: any) => {
-    balanceService.getBalance(req.params.address, req.query.currency)
-      .then(data => {
-        res.json(data)
-      })
-      .catch(err => {
-        console.log('[GET] /balance', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /balance', err)
+        res.status(notFound).json(err)
       })
   }
 }

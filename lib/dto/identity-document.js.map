@@ -1,0 +1,1 @@
+{"version":3,"file":"identity-document.js","sourceRoot":"","sources":["../../src/dto/identity-document.ts"],"names":[],"mappings":";;AAAA;IAKE,0BAAY,IAAI;QACd,IAAI,CAAC,SAAS,GAAG,IAAI,CAAC,SAAS,CAAA;QAC/B,IAAI,CAAC,OAAO,GAAG,IAAI,CAAC,OAAO,CAAA;QAC3B,IAAI,CAAC,IAAI,GAAG,IAAI,CAAC,IAAI,CAAA;IACvB,CAAC;IACH,uBAAC;AAAD,CAAC,AAVD,IAUC"}

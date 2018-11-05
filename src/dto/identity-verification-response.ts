@@ -1,5 +1,5 @@
-import RequiredIdentityDocuments from '../dto/required-identity-documents'
 import IdentityVerificationInfo from '../dto/identity-verification-info'
+import RequiredIdentityDocuments from '../dto/required-identity-documents'
 
 export default class IdentityVerificationResponse {
   id: string

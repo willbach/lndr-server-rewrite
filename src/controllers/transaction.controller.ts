@@ -1,6 +1,8 @@
-import transactionService from '../services/transaction.service'
-import RejectRequest from '../dto/reject-request'
+import { badRequest, notFound, successNoContent, unauthorized } from '../utils/http.codes'
+
 import CreditRecord from '../dto/credit-record'
+import RejectRequest from '../dto/reject-request'
+import transactionService from '../services/transaction.service'
 
 export default {
   createTransaction: (req, res) => {
@@ -9,41 +11,38 @@ export default {
     if (transaction.signatureMatches()) {
       transactionService.submitCredit(transaction, 0)
         .then(() => {
-          res.status(204).end()
+          res.status(successNoContent).end()
         })
-        .catch(err => {
-          console.log('[POST] /lend or /borrow', err)
-          res.status(400).json(err)
+        .catch((err) => {
+          console.error('[POST] /lend or /borrow', err)
+          res.status(badRequest).json(err)
         })
     } else {
-      console.log('[POST] /lend or /borrow', 'Signature does not match')
-      res.status(401).json('Signature does not match')
+      console.error('[POST] /lend or /borrow', 'Signature does not match')
+      res.status(unauthorized).json('Signature does not match')
     }
   },
 
-  submitMultiSettlement: async(req, res) => {
-    const transactions = req.body.map(tx => new CreditRecord(tx))
+  getPendingTransactions: (req, res) => {
+    transactionService.getPendingTransactions(req.params.address)
+      .then((data) => {
+        res.json(data)
+      })
+      .catch((err) => {
+        console.error('[GET] /pending', err)
+        res.status(notFound).json(err)
+      })
+  },
 
-    const signaturesMatch = transactions.reduce((acc, cur) => acc && cur.signatureMatches(), true)
-    
-    if (signaturesMatch) {
-      let index = 0
-      while (transactions.length > 0) {
-        let tx = transactions.shift()
-        await transactionService.submitCredit(tx, index)
-          .catch(err => {
-            console.log('[POST] /multi_settlement', err)
-            res.status(400).json(err)
-          })
-        
-        index++
-      }
-
-      res.status(204).end()
-
-    } else {
-      res.status(401).json('Signature does not match')
-    }
+  getTransactions: (req, res) => {
+    transactionService.getTransactions(req.query.user)
+      .then((data) => {
+        res.json(data)
+      })
+      .catch((err) => {
+        console.error('[GET] /transactions', err)
+        res.status(notFound).json(err)
+      })
   },
 
   reject: (req, res) => {
@@ -51,37 +50,41 @@ export default {
 
     transactionService.reject(request)
       .then(() => {
-        res.status(204).end()
+        res.status(successNoContent).end()
       })
-      .catch(err => {
-        console.log('[POST] /reject', err)
+      .catch((err) => {
+        console.error('[POST] /reject', err)
         if (err.toString().contains('bad rejection sig')) {
-          res.status(401).json(err)
+          res.status(unauthorized).json(err)
         } else {
-          res.status(400).json(err)
+          res.status(badRequest).json(err)
         }
       })
   },
 
-  getTransactions: (req, res) => {
-    transactionService.getTransactions(req.query.user)
-      .then(data => {
-        res.json(data)
-      })
-      .catch(err => {
-        console.log('[GET] /transactions', err)
-        res.status(400).json(err)
-      })
-  },
+  submitMultiSettlement: async (req, res) => {
+    const transactions = req.body.map((tx) => new CreditRecord(tx))
 
-  getPendingTransactions: (req, res) => {
-    transactionService.getPendingTransactions(req.params.address)
-      .then(data => {
-        res.json(data)
-      })
-      .catch(err => {
-        console.log('[GET] /pending', err)
-        res.status(400).json(err)
-      })
+    const signaturesMatch = transactions.reduce((acc, cur) => acc && cur.signatureMatches(), true)
+
+    /* eslint-disable no-await-in-loop */
+    if (signaturesMatch) {
+      let index = 0
+      while (transactions.length > 0) {
+        const tx = transactions.shift()
+        await transactionService.submitCredit(tx, index)
+          .catch((err) => {
+            console.error('[POST] /multi_settlement', err)
+            res.status(badRequest).json(err)
+          })
+
+        index += 1
+      }
+
+      res.status(successNoContent).end()
+    } else {
+      res.status(unauthorized).json('Signature does not match')
+    }
+    /* eslint-enable no-await-in-loop */
   }
 }

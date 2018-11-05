@@ -1,10 +1,10 @@
 const assert = require('assert')
 const request = require('supertest')
-const server = require('../build/server.js')
-const bufferUtil = require('../build/utils/buffer.util')
+const server = require('../lib/server.js')
+const bufferUtil = require('../lib/utils/buffer.util')
 const testUtil = require('./util/test.util')
 const ethUtil = require('ethereumjs-util')
-const CreditRecord = require('../build/dto/credit-record')
+const CreditRecord = require('../lib/dto/credit-record')
 
 const testUrl = "http://localhost:7402"
 const testPrivkey0  = "7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37"

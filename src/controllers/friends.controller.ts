@@ -1,58 +1,60 @@
+import { badRequest, notFound, successNoContent } from '../utils/http.codes'
+
 import friendsService from '../services/friends.service'
 
 export default {
+  addFriends: (req, res) => {
+    friendsService.addFriends(req.params.address, req.body)
+      .then(() => {
+        res.status(successNoContent).end()
+      })
+      .catch((err) => {
+        console.error('[POST] /add_friends', err)
+        res.status(badRequest).json(err)
+      })
+  },
+
   getFriendList: (req, res) => {
     friendsService.getFriendList(req.params.address)
-      .then(data => {
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /friends', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /friends', err)
+        res.status(notFound).json(err)
       })
   },
 
   getFriendRequests: (req, res) => {
     friendsService.getFriendRequests(req.params.address)
-      .then(data => {
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /friend_requests', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /friend_requests', err)
+        res.status(notFound).json(err)
       })
   },
 
   getOutboudFriendRequests: (req, res) => {
     friendsService.getOutboudFriendRequests(req.params.address)
-      .then(data => {
+      .then((data) => {
         res.json(data)
       })
-      .catch(err => {
-        console.log('[GET] /outbound_friend_requests', err)
-        res.status(400).json(err)
-      })
-  },
-
-  addFriends: (req, res) => {
-    friendsService.addFriends(req.params.address, req.body)
-      .then( () => {
-        res.status(204).end()
-      })
-      .catch(err => {
-        console.log('[POST] /add_friends', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[GET] /outbound_friend_requests', err)
+        res.status(notFound).json(err)
       })
   },
 
   removeFriends: (req, res) => {
     friendsService.removeFriends(req.params.address, req.body)
-      .then( () => {
-        res.status(204).end()
+      .then(() => {
+        res.status(successNoContent).end()
       })
-      .catch(err => {
-        console.log('[POST] /remove_friends', err)
-        res.status(400).json(err)
+      .catch((err) => {
+        console.error('[POST] /remove_friends', err)
+        res.status(badRequest).json(err)
       })
   }
 }

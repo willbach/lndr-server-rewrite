@@ -1,9 +1,10 @@
+import { bufferToHex, hexToBuffer } from '../utils/buffer.util'
+
 import IdentityDocument from '../dto/identity-document'
-import RequiredIdentityDocuments from '../dto/required-identity-documents'
 import IdentityVerificationInfo from '../dto/identity-verification-info'
+import RequiredIdentityDocuments from '../dto/required-identity-documents'
 
 import { signatureToAddress } from '../utils/credit.protocol.util'
-import { hexToBuffer, bufferToHex } from '../utils/buffer.util'
 const ethUtil = require('ethereumjs-util')
 
 export default class IdentityVerificationRequest {
