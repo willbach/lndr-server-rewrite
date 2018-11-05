@@ -7,3 +7,5 @@ lndr-backend/
 lndr-cli/
 .stack-work/
 stack.yaml
+
+data/lndr-server.config.dev.json
