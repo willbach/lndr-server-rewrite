@@ -96,8 +96,6 @@ export default {
 
     const pending = new CreditRecord(rawPending, 'settlement')
 
-    console.log(pending)
-
     if (signerAddress !== pending.creditor && signerAddress !== pending.debtor) {
       throw new Error('bad rejection sig')
     }

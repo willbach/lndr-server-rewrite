@@ -101,46 +101,62 @@ describe('Settlement Tests', function() {
 
     let settleAmount = 0
     // user5 submits pending settlement credit to user6
-    it('POST /lend should be successful', function(done) {
+    it('POST /lend should be successful for user 5 the first time', function() {
       const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
-      request(options).then(response => {
-        console.log(response)
-        done()
+      return request(options).then(response => {
       })
     })
   
-    it('GET /pending_settlements should have 1 pending settlement for user 5', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 5', function() {
       const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
-      request(options).then(res => {
+      return request(options).then(res => {
         assert.strictEqual(res.unilateralSettlements.length, 1)
         assert.strictEqual(res.bilateralSettlements.length, 0)
-        done()
+      })
+    })
+
+    it('GET /reject should delete the pending settlement for user 6', function() {
+      const rejectRequest = { hash: settlementCredit.hash, signature: testUtil.serverSign(settlementCredit.hash, testPrivkey6) }
+      const options = { method: 'POST', uri: 'http://localhost:7402/reject', body: rejectRequest, json: true }
+      return request(options).then(response => {
+      })
+    })
+
+    it('GET /pending_settlements should have 0 pending settlements for user 5', function() {
+      const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
+      return request(options).then(res => {
+        assert.strictEqual(res.unilateralSettlements.length, 0)
+        assert.strictEqual(res.bilateralSettlements.length, 0)
+      })
+    })
+
+    it('POST /lend should be successful for user 5 a second time', function() {
+      const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
+      return request(options).then(response => {
       })
     })
   
-    it('POST /lend should be successful', function(done) {
+    it('POST /lend should be successful for user 6', function() {
       settlementCredit.submitter = testAddress6
       settlementCredit.signature = testUtil.signCredit(settlementCredit, testPrivkey6)
   
       const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
-      request(options).then(response => {
+      return request(options).then(response => {
         assert.strictEqual(response, undefined)
-        done()
       })
     })
   
-    it('GET /pending_settlements should have 1 pending settlement for user 6', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 6', function() {
       const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
-      request(options).then(res => {
+      return request(options).then(res => {
         assert.strictEqual(res.unilateralSettlements.length, 0)
         assert.strictEqual(res.bilateralSettlements.length, 1)
         settleAmount = res.bilateralSettlements[0].creditRecord.settlementAmount
         console.log('SETTLEMENT AMOUNT', settleAmount)
-        done()
       })
     })
   
-    it('should confirm that ETH was sent and then verify the settlement', function(done) {
+    it('should confirm that ETH was sent and then verify the settlement', function() {
       this.timeout(6000)
       
       const getNonce = new Promise((resolve, reject) => {
@@ -192,36 +208,37 @@ describe('Settlement Tests', function() {
           // get pending here
           setTimeout(function() {
             const options1 = { uri: 'http://localhost:7402/pending_settlements/' + testAddress5, json: true }
-            request(options1).then(res => {
+            const request1 = request(options1).then(res => {
               assert.strictEqual(res.unilateralSettlements.length, 0)
               assert.strictEqual(res.bilateralSettlements.length, 0)
             })
       
             const options2 = { uri: 'http://localhost:7402/balance/' + testAddress5 + '?currency=USD', json: true }
-            request(options2).then(res => {
+            const request2 = request(options2).then(res => {
               assert.strictEqual(res, 2939)
             })
       
             const options3 = { uri: 'http://localhost:7402/balance/' + testAddress5 + '/' + testAddress6 + '?currency=USD', json: true }
-            request(options3).then(res => {
+            const request3 = request(options3).then(res => {
               assert.strictEqual(res, 2939)
             })
       
             const options4 = { uri: 'http://localhost:7402/balance/' + testAddress6 + '?currency=USD', json: true }
-            request(options4).then(res => {
+            const request4 = request(options4).then(res => {
               assert.strictEqual(res, -2939)
             })
       
             const options5 = { uri: 'http://localhost:7402/balance/' + testAddress6 + '/' + testAddress5 + '?currency=USD', json: true }
-            request(options5).then(res => {
+            const request5 = request(options5).then(res => {
               assert.strictEqual(res, -2939)
             })
       
             const options6 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash, json: true }
-            request(options6).then(res => {
+            const request6 = request(options6).then(res => {
               assert.strictEqual(res, txHash.slice(2))
-              done()
             })
+
+            return Promise.all([request1, request2, request3, request4, request5, request6])
           }, 3000)
         })
       })
@@ -243,47 +260,45 @@ describe('Settlement Tests', function() {
 
     let settleAmount = 0
     // user5 submits pending settlement credit to user6
-    it('POST /borrow should be successful', function(done) {
+    it('POST /borrow should be successful', function() {
       const options = { method: 'POST', uri: 'http://localhost:7402/borrow', body: settlementCredit, json: true }
-      request(options).then(response => {
-        done()
+      return request(options).then(response => {
+        console.log(response)
       })
     })
   
-    it('GET /pending_settlements should have 1 pending settlement for user 4', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 3', function() {
       const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
-      request(options).then(res => {
+      return request(options).then(res => {
+        console.log(res)
         assert.strictEqual(res.unilateralSettlements.length, 1)
         assert.strictEqual(res.bilateralSettlements.length, 0)
-        done()
       })
     })
   
-    it('POST /lend should be successful', function(done) {
+    it('POST /lend should be successful', function() {
       settlementCredit.submitter = testAddress3
       settlementCredit.signature = testUtil.signCredit(settlementCredit, testPrivkey3)
   
       const options = { method: 'POST', uri: 'http://localhost:7402/lend', body: settlementCredit, json: true }
-      request(options).then(response => {
+      return request(options).then(response => {
         assert.strictEqual(response, undefined)
-        done()
       })
     })
   
-    it('GET /pending_settlements should have 1 pending settlement for user 3', function(done) {
+    it('GET /pending_settlements should have 1 pending settlement for user 3', function() {
       const options = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
-      request(options).then(res => {
+      return request(options).then(res => {
         assert.strictEqual(res.unilateralSettlements.length, 0)
         assert.strictEqual(res.bilateralSettlements.length, 1)
         
         settleAmount = res.bilateralSettlements[0].creditRecord.settlementAmount
         assert.strictEqual(settleAmount, 50000000000000000000)
         console.log('SETTLEMENT AMOUNT', settleAmount)
-        done()
       })
     })
   
-    it('should confirm that DAI was sent and then verify the settlement', function(done) {
+    it('should confirm that DAI was sent and then verify the settlement', function() {
       this.timeout(6000)
 
       const getNonce = new Promise((resolve, reject) => {
@@ -341,37 +356,37 @@ describe('Settlement Tests', function() {
             // get pending here
             setTimeout(function() {
               const options1 = { uri: 'http://localhost:7402/pending_settlements/' + testAddress3, json: true }
-              request(options1).then(res => {
+              const request1 = request(options1).then(res => {
                 assert.strictEqual(res.unilateralSettlements.length, 0)
                 assert.strictEqual(res.bilateralSettlements.length, 0)
               })
         
               const options2 = { uri: 'http://localhost:7402/balance/' + testAddress3 + '?currency=USD', json: true }
-              request(options2).then(res => {
+              const request2 = request(options2).then(res => {
                 assert.strictEqual(res, -5000)
               })
         
               const options3 = { uri: 'http://localhost:7402/balance/' + testAddress3 + '/' + testAddress4 + '?currency=USD', json: true }
-              request(options3).then(res => {
+              const request3 = request(options3).then(res => {
                 assert.strictEqual(res, -5000)
               })
         
               const options4 = { uri: 'http://localhost:7402/balance/' + testAddress4 + '?currency=USD', json: true }
-              request(options4).then(res => {
+              const request4 = request(options4).then(res => {
                 assert.strictEqual(res, 5000)
               })
         
               const options5 = { uri: 'http://localhost:7402/balance/' + testAddress4 + '/' + testAddress3 + '?currency=USD', json: true }
-              request(options5).then(res => {
+              const request5 = request(options5).then(res => {
                 assert.strictEqual(res, 5000)
               })
         
               const options6 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit.hash, json: true }
-              request(options6).then(res => {
+              const request6 = request(options6).then(res => {
                 assert.strictEqual(res, txHash.slice(2))
-                done()
               })
-        
+
+              return Promise.all([request1, request2, request3, request4, request5, request6])
             }, 3000)
           })
         })
@@ -403,7 +418,7 @@ describe('Settlement Tests', function() {
     settlementCredit2.hash = testUtil.bufferToHex(ethUtil.sha3(buffer2))
     settlementCredit2.signature = testUtil.signCredit(settlementCredit2, testPrivkey9)
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 1', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 9', function() {
       const options = { method: 'POST', uri: 'http://localhost:7402/multi_settlement', body: [settlementCredit1, settlementCredit2], json: true }
       return request(options).then(response => {
       })
@@ -425,7 +440,7 @@ describe('Settlement Tests', function() {
       })
     })
 
-    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 2', function() {
+    it('POST /multi_settlement should return 204 for a successful multi credit submission from user 0', function() {
       settlementCredit1.submitter = testAddress0
       settlementCredit1.signature = testUtil.signCredit(settlementCredit1, testPrivkey0)
       settlementCredit2.submitter = testAddress0
@@ -449,7 +464,7 @@ describe('Settlement Tests', function() {
       })
     })
 
-    it('should confirm that ETH was sent and then verify the settlement', function(done) {
+    it('should confirm that ETH was sent and then verify the settlement', function() {
       this.timeout(6000)
       
       const getNonce = new Promise((resolve, reject) => {
@@ -516,41 +531,42 @@ describe('Settlement Tests', function() {
           // get pending here
           setTimeout(function() {
             const options1 = { uri: 'http://localhost:7402/pending_settlements/' + testAddress9, json: true }
-            request(options1).then(res => {
+            const request1 = request(options1).then(res => {
               assert.strictEqual(res.unilateralSettlements.length, 0)
               assert.strictEqual(res.bilateralSettlements.length, 0)
             })
       
             const options2 = { uri: 'http://localhost:7402/balance/' + testAddress9 + '?currency=JPY', json: true }
-            request(options2).then(res => {
+            const request2 = request(options2).then(res => {
               assert.strictEqual(res, 1000)
             })
       
             const options3 = { uri: 'http://localhost:7402/balance/' + testAddress9 + '/' + testAddress0 + '?currency=JPY', json: true }
-            request(options3).then(res => {
+            const request3 = request(options3).then(res => {
               assert.strictEqual(res, 1000)
             })
       
             const options4 = { uri: 'http://localhost:7402/balance/' + testAddress0 + '?currency=JPY', json: true }
-            request(options4).then(res => {
+            const request4 = request(options4).then(res => {
               assert.strictEqual(res, -1000)
             })
       
             const options5 = { uri: 'http://localhost:7402/balance/' + testAddress0 + '/' + testAddress9 + '?currency=JPY', json: true }
-            request(options5).then(res => {
+            const request5 = request(options5).then(res => {
               assert.strictEqual(res, -1000)
             })
       
             const options6 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit1.hash, json: true }
-            request(options6).then(res => {
+            const request6 = request(options6).then(res => {
               assert.strictEqual(res, txHash.slice(2))
             })
 
             const options7 = { uri: 'http://localhost:7402/tx_hash/' + settlementCredit2.hash, json: true }
-            request(options7).then(res => {
+            const request7 = request(options7).then(res => {
               assert.strictEqual(res, txHash.slice(2))
-              done()
             })
+
+            return Promise.all([request1, request2, request3, request4, request5, request6, request7])
           }, 3000)
         })
       })
